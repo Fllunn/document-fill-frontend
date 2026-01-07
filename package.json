@@ -1,5 +1,5 @@
 {
-  "name": "xmas-frontend",
+  "name": "document-fill-frontend",
   "type": "module",
   "private": true,
   "scripts": {
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.0.3",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
     "sass-embedded": "^1.97.1",

@@ -4,7 +4,7 @@ export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
 
   const $apiFetch = $fetch.create({
-    baseURL: config.public.apiBase,
+    baseURL: config.public.apiBase as string,
     credentials: 'include',
     onRequest({ request, options, error }) {
 

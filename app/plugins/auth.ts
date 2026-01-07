@@ -1,3 +1,4 @@
 export default defineNuxtPlugin(async (nuxtApp) => {
-  await useAuth().checkAuth()
+  return;
+  // await useAuth().checkAuth()
 })
