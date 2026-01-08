@@ -5,5 +5,17 @@ const auth = useAuth();
 </script>
 
 <template>
-  <v-btn @click="auth.logout">Выйти</v-btn>
-</template>n
+  <v-container>
+    <v-row>
+      
+      <v-col cols="12">
+        <h1>Шаблоны</h1>
+      </v-col>
+
+      <v-col cols="12">
+        <TemplatesTemplateUploadForm />
+      </v-col>
+
+    </v-row>
+  </v-container>
+</template>
