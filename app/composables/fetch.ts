@@ -10,6 +10,7 @@ export function useApiFetch<T>(
 
   return useFetch(url, {
     ...options,
+    baseURL: useRuntimeConfig().public.apiBase as string,
     $fetch: useNuxtApp().$apiFetch,
   })
 }

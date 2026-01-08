@@ -36,10 +36,9 @@ async function logOut() {
         <v-spacer></v-spacer>
 
         <div class="d-flex align-center">
-          ЛК
-          <!-- <v-btn icon @click="toggleTheme" title="Переключить тему">
-            <v-icon icon="mdi-theme-light-dark"></v-icon>
-          </v-btn> -->
+          <div class="d-flex align-center cursor-pointer" @click="router.push('/cabinet')">
+            ЛК
+          </div>
         </div>
       </v-container>
     </v-app-bar>

@@ -41,9 +41,7 @@ export default {
   uploadAvatar(formData: FormData, userId: string) {
     return useApiFetch(`/auth/upload-avatar?user_id=${userId}`, { method: 'POST', headers: { 'Content-Type': 'multipart/form-data' }, body: formData })
   },
-  validateInviteToken(inviteToken: string): Promise<{ email: string }> {
-    const { $apiFetch } = useNuxtApp()
-
-    return $apiFetch<{ email: string }>('/invites/validate-invite-token', { method: 'POST', body: { inviteToken } })
+  validateInviteToken(inviteToken: string): Promise<any> {
+    return useApiFetch<{ email: string }>('/invites/validate-invite-token', { method: 'POST', body: { inviteToken } })
   }
 }
