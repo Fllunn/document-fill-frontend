@@ -30,7 +30,12 @@ const login = handleSubmit(async values => {
 
   loading.value = false;
   if (res?.status?.value === 'success') {
-    router.push('/cabinet');
+    const user = auth.user;
+    if(user?.roles?.includes('admin')){
+      router.push("/admin");
+    } else {
+      router.push("/cabinet");
+    }
   }
 })
 
@@ -60,9 +65,15 @@ const login = handleSubmit(async values => {
           </v-btn>
         </v-form>
 
-        <v-btn text class="mt-4 w-100" @click="router.push('/registration')">
+        <!-- <v-btn text class="mt-4 w-100" @click="router.push('/registration')">
           Создать аккаунт
-        </v-btn>
+        </v-btn> -->
+        <div class="text-subtitle-1 w-100 mt-4">
+          Нет аккаунта?
+          <NuxtLink to="/registration" class="font-weight-bold text-primary text-decoration-none">
+            Зарегистрироваться
+          </NuxtLink>
+        </div>
       </v-card>
     </v-col>
   </v-container>

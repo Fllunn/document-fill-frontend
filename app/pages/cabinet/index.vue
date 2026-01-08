@@ -6,4 +6,4 @@ const auth = useAuth();
 
 <template>
   <v-btn @click="auth.logout">Выйти</v-btn>
-</template>
+</template>n

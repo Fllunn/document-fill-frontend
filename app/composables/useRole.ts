@@ -7,8 +7,8 @@ export const useRole = () => {
       return false;
     }
 
-    const hasManagerRole = authStore.user.roles.includes('manager');
-    if (!hasManagerRole) {
+    const hasAdminRole = authStore.user.roles.includes('admin');
+    if (!hasAdminRole) {
       return false;
     }
     return true;

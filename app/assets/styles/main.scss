@@ -2,10 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  font-family: Montserrat !important;
-}
 a {
   margin: 2px;
   text-decoration: underline;
+}
+
+:root {
+  --v-font-family: "Menlo", system-ui, sans-serif;
+}
+
+html,
+body,
+#__nuxt,
+.v-application {
+  font-family: var(--v-font-family);
+}
+
+.font-regular {
+  font-weight: 400;
+  font-style: normal;
+}
+.font-italic {
+  font-style: italic;
+}
+.font-bold {
+  font-weight: 700;
+}
+.font-bold-italic {
+  font-weight: 700;
+  font-style: italic;
+}
+
+h1 {
+  font-size: clamp(1.625rem, 1.0284rem + 1.7045vw, 2.375rem);
+  font-weight: 400;
+}
+
+h2 {
+  font-size: clamp(1.25rem, 0.7528rem + 1.4205vw, 1.875rem);
+  font-weight: 400;
 }
