@@ -1,46 +1,27 @@
-import { toast } from 'vue3-toastify'
+import TemplatesApi from "../api/TemplatesApi";
+import type { ITemplate } from "~/types/template.interface";
 
-export const useUploadTemplate = () => {
-  const { $apiFetch } = useNuxtApp()
-  
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+export function useUploadTemplate() {
+  const state = useState<ITemplate | null>('templates', () => null)
 
-  const uploadTemplate = async (file: File) => {
-    loading.value = true
-    error.value = null
-    
+  async function createFromFile(file: File, isSystem: boolean) {
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      const response = await $apiFetch('/templates/upload', {
-        method: 'POST',
-        body: formData,
-      })
+      const res = await TemplatesApi.createFromFile(file, isSystem)
 
-      if (process.client) {
-        toast('Шаблон успешно загружен', { type: 'success' })
+      if (res) {
+        state.value = res
       }
 
-      return response
-    } catch (err: any) {
-      const errorMessage = err?.data?.message || 'Ошибка при загрузке шаблона'
-      error.value = errorMessage
+      return true
+    } catch (error) {
+      console.error('Error uploading template:', error)
       
-      if (process.client) {
-        toast(errorMessage, { type: 'error' })
-      }
-      
-      throw err
-    } finally {
-      loading.value = false
+      return false
     }
   }
 
   return {
-    loading,
-    error,
-    uploadTemplate
+    state,
+    createFromFile
   }
-} 
+}

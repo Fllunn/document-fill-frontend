@@ -1,26 +1,39 @@
 <script setup lang="ts">
-
-import { ref } from 'vue';
+import { ref } from 'vue'
 import { useUploadTemplate } from '~/composables/useUploadTemplate'
 
-const file = ref<File | null>(null);
-const { loading, error, uploadTemplate } = useUploadTemplate();
+const { state, createFromFile } = useUploadTemplate()
 
-const upload = async () => {
-  if (!file.value) return;
+const file = ref<File | null>(null)
+const isSystem = ref(false)
 
-  await uploadTemplate(file.value);
+function onFileChange(value: File | File[] | null) {
+  file.value = Array.isArray(value) ? value[0] ?? null : value
 }
 
+async function submit() {
+  if (!file.value) return
+
+  const success = await createFromFile(file.value, isSystem.value)
+  if (success) {
+
+    // Сброс формы
+    file.value = null
+    isSystem.value = false
+    state.value = null
+  }
+}
 </script>
 
 <template>
-  <v-form>
-    <v-file-input v-model="file" label="Загрузить шаблон"
-      :loading="loading" :disabled="loading" accept=".docx,.doc" />
+  <v-file-input
+    label="Загрузить шаблон"
+    accept=".docx"
+    @update:model-value="onFileChange"
+    v-model="file"
+  />
 
-    <v-btn color="primary" @click="upload" :loading="loading" :disabled="loading || !file">
-      Загрузить
-    </v-btn>
-  </v-form>
+  <v-checkbox v-model="isSystem" label="Системный шаблон" />
+
+  <v-btn color="primary" @click="submit">Создать</v-btn>
 </template>
