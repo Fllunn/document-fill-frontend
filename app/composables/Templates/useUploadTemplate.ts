@@ -1,4 +1,4 @@
-import TemplatesApi from "../api/TemplatesApi";
+import TemplatesApi from "../../api/TemplatesApi";
 import type { ITemplate } from "~/types/template.interface";
 
 export function useUploadTemplate() {

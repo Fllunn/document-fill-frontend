@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useUploadTemplate } from '~/composables/useUploadTemplate'
+import { useUploadTemplate } from '~/composables/Templates/useUploadTemplate'
 
 const { state, createFromFile } = useUploadTemplate()
 

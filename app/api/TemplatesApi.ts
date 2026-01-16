@@ -1,5 +1,5 @@
 import type { ITemplate } from '~/types/template.interface'
-import type { ITemplateToEdit } from '~/types/template-edit.interfaces'
+import type { ITemplateToEdit } from '~/types/template-edit.interface'
 
 export default {
   createFromFile(file: File, isSystem: boolean): Promise<any> {
