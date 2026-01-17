@@ -4,7 +4,7 @@ import type { VariablesState } from "~/types/state/template.interface";
 
 export function useVariablesTemplate() {
   const state = useState<VariablesState>('template-variables', () => ({
-    data: [] as string[],
+    data: {} as Record<string, string[]>,
     loading: false,
     error: null
   }))

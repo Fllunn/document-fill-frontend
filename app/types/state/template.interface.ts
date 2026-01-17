@@ -1,5 +1,5 @@
 export interface VariablesState {
-  data: string[];
+  data: Record<string, string[]>;
   loading: boolean;
   error: string | null;
 }

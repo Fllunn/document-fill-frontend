@@ -30,11 +30,18 @@ watch(templateId, (newId) => {
         <v-progress-circular v-if="state.loading" indeterminate />
         <v-alert v-else-if="state.error">Ошибка: {{ state.error }}</v-alert>
 
-        <v-list v-else>
-          <v-list-item v-for="(v, i) in state.data" :key="i">
-            <v-text-field :placeholder="v" />
-          </v-list-item>
-        </v-list>
+        <v-sheet v-else>
+          <v-list>
+            <template v-for="(vars, category) in state.data" :key="category">
+              <v-subheader>{{ category }}</v-subheader>
+
+              <v-list-item v-for="(v, i) in vars" :key="i">
+                <v-text-field :placeholder="v" />
+              </v-list-item>
+            </template>
+          </v-list>
+        </v-sheet>
+
       </v-col>
     </v-row>
     

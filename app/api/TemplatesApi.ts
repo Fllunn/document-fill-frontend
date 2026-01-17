@@ -50,9 +50,9 @@ export default {
     return $apiFetch<ITemplateToEdit>(`/templates/${templateId}`, { method: 'PATCH', body: formData })
   },
 
-  getVariables(templateId: string): Promise<string[]> {
+  getVariables(templateId: string): Promise<Record<string, string[]>> {
     const { $apiFetch } = useNuxtApp()
 
-    return $apiFetch<string[]>(`/templates/${templateId}/variables`, { method: 'GET' })
+    return $apiFetch<Record<string, string[]>>(`/templates/${templateId}/variables`, { method: 'GET' })
   },
 }
