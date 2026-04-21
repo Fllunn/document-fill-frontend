@@ -49,7 +49,7 @@ export const useAuth = defineStore('auth', () => {
 
       return true
     } catch {
-      await logout()
+      user.value = null
 
       return false
     }

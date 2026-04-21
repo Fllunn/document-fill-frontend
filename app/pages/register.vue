@@ -65,7 +65,7 @@ const email = useField<string>('email')
 const password = useField<string>('password')
 const agreement = useField<boolean>('agreement')
 
-const showPassword = ref(false)
+const isShowPassword = ref(false)
 const loading = ref(false)
 
 const submit = handleSubmit(async (values) => {
@@ -125,13 +125,13 @@ const submit = handleSubmit(async (values) => {
           <v-text-field
             v-model="password.value.value"
             :error-messages="password.errorMessage.value"
-            :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPassword ? 'text' : 'password'"
+            :append-inner-icon="isShowPassword ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="isShowPassword ? 'text' : 'password'"
             label="Пароль"
             placeholder="Введите пароль"
             variant="outlined"
             prepend-inner-icon="mdi-lock-outline"
-            @click:append-inner="showPassword = !showPassword"
+            @click:append-inner="isShowPassword = !isShowPassword"
           />
 
           <v-checkbox

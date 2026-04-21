@@ -1,41 +1,68 @@
 <script setup lang="ts">
-import { useField, useForm } from 'vee-validate';
+import { useField, useForm } from 'vee-validate'
 
 const router = useRouter()
 const auth = useAuth()
 
-const { meta, handleSubmit, handleReset } = useForm({
+type LoginForm = {
+  email: string
+  password: string
+}
+
+const { meta, handleSubmit } = useForm<LoginForm>({
+  initialValues: {
+    email: '',
+    password: '',
+  },
   validationSchema: {
-    password(value: string) {
-      if (value?.length >= 8) return true;
-      return 'Пароль должен содержать не менее 8 символов';
+    email: (value: string) => {
+      if (!value) return 'Введите почту'
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+      if (!emailRegex.test(value)) return 'Введите корректную почту'
+
+      if (value.length > 300) return 'Почта должна содержать не более 300 символов'
+
+      return true
     },
-    email(value: string) {
-      if (/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(value)) return true;
-      return 'Введите корректный email';
+
+    password: (value: string) => {
+      if (!value) return 'Введите пароль'
+
+      if (value.length < 8) return 'Пароль должен содержать не менее 8 символов'
+
+      if (value.length > 50) return 'Пароль должен содержать не более 50 символов'
+
+      return true
     },
   },
 })
 
-const email = useField('email');
-const password = useField('password');
+const email = useField<string>('email')
+const password = useField<string>('password')
 
-let isShowPassword = ref(false);
-let loading = ref(false);
+const isShowPassword = ref(false)
+const loading = ref(false)
 
-const login = handleSubmit(async values => {
-  loading.value = true;
+const login = handleSubmit(async (values) => {
+  loading.value = true
 
-  let res = await auth.login(values.email, values.password);
+  try {
+    const isLoggedIn = await auth.login({
+      email: values.email,
+      password: values.password,
+    })
 
-  loading.value = false;
-  if (res?.status?.value === 'success') {
-    const user = auth.user;
-    if(user?.roles?.includes('admin')){
-      router.push("/admin");
-    } else {
-      router.push("/cabinet");
+    if (isLoggedIn) {
+      if (auth.user?.roles?.includes('admin')) {
+        await router.push('/admin')
+      } else {
+        await router.push('/cabinet')
+      }
     }
+  } finally {
+    loading.value = false
   }
 })
 
@@ -47,33 +74,53 @@ const login = handleSubmit(async values => {
       <v-card class="d-flex flex-column justify-center align-center text-center rounded-lg w-100 pl-6 pr-6 pt-4 pb-6">
         <h2>Вход</h2>
 
-        <v-form @submit.prevent="login" class="d-flex mt-3 flex-column align-center justify-center w-100">
-          <v-text-field label="Email" type="email"
-          placeholder="example@yandex.ru"
-          v-model="email.value.value"
-          :error-messages="email.errorMessage.value"
-          variant="outlined" density="compact" class="w-100" />
+        <v-form class="mt-6 w-100" @submit.prevent="login">
+          
+          <!-- Почта -->
+          <v-text-field
+            v-model="email.value.value"
+            :error-messages="email.errorMessage.value"
+            label="Почта"
+            placeholder="ivan@gmail.com"
+            variant="outlined"
+            prepend-inner-icon="mdi-email-outline"
+          />
 
-          <v-text-field label="Пароль" v-model="password.value.value"
-          :append-inner-icon="isShowPassword ? 'mdi-eye' : 'mdi-eye-off'"
-          @click:append-inner="isShowPassword = !isShowPassword"
-          :type="isShowPassword ? 'text' : 'password'"
-          :error-messages="password.errorMessage.value" variant="outlined" density="compact" class="w-100 mt-2" />
+          <!-- Пароль -->
+          <v-text-field
+            v-model="password.value.value"
+            :error-messages="password.errorMessage.value"
+            :append-inner-icon="isShowPassword ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="isShowPassword ? 'text' : 'password'"
+            label="Пароль"
+            placeholder="Введите пароль"
+            variant="outlined"
+            prepend-inner-icon="mdi-lock-outline"
+            @click:append-inner="isShowPassword = !isShowPassword"
+          />
 
-          <v-btn type="submit" :disabled="!meta.valid" color="accent" class="mt-4 w-100" :loading="loading">
+          <v-btn
+            type="submit"
+            color="accent"
+            class="mt-4 w-100"
+            :disabled="!meta.valid"
+            :loading="loading"
+          >
             Войти
           </v-btn>
         </v-form>
 
-        <!-- <v-btn text class="mt-4 w-100" @click="router.push('/registration')">
-          Создать аккаунт
-        </v-btn> -->
-        <div class="text-subtitle-1 w-100 mt-4">
+        <v-card-text class="text-subtitle-1 w-100 mt-4 pa-0">
+
           Нет аккаунта?
-          <NuxtLink to="/registration" class="font-weight-bold text-primary text-decoration-none">
+          <NuxtLink
+            to="/register"
+            class="font-weight-bold text-primary text-decoration-none"
+          >
             Зарегистрироваться
           </NuxtLink>
-        </div>
+
+        </v-card-text>
       </v-card>
     </v-col>
   </v-container>
