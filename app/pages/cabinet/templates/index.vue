@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import TemplateVariablesEditor from '~/components/templates/TemplateVariablesEditor.vue';
-import Categories from '~/components/Categories.vue';
+// import TemplateVariablesEditor from '~/components/templates/TemplateVariablesEditor.vue';
+// import Categories from '~/components/Categories.vue';
 
 definePageMeta({ middleware: 'auth' })
 const auth = useAuth();
@@ -10,6 +10,6 @@ const auth = useAuth();
 
 <template>
   <v-btn @click="auth.logout">Выйти</v-btn>
-  <TemplateVariablesEditor />
-  <Categories />
+  <!-- <TemplateVariablesEditor /> -->
+  <!-- <Categories /> -->
 </template>

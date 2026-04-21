@@ -1,33 +1,37 @@
 import { defineStore } from "pinia"
-import AuthAPI from "../api/AuthApi"
-
-import type { User } from "../types/user.interface"
+import { useAuthApi } from "../api/AuthApi"
 import { ref } from "vue"
 
+import type { IAuthUser } from "../types/auth/auth-user.interface"
+import type { IRegister } from "~/types/auth/register.interface"
+import type { ILogin } from "~/types/auth/login.interface"
+import type { IUpdateUser } from "~/types/auth/update-user.interface"
+import type { IChangePassword } from "~/types/auth/change-password.interface"
+
 export const useAuth = defineStore('auth', () => {
-  let user = ref<User | null>(null)
+  const user = ref<IAuthUser | null>(null)
+  const AuthAPI = useAuthApi()
+  const router = useRouter()
 
-  async function registration(data: any): Promise<boolean> {
+  async function register(data: IRegister): Promise<boolean> {
     try {
-      const response = await AuthAPI.registration(data)
-      console.log(response);
+      const response = await AuthAPI.register(data)
+      
+      user.value = response
 
-      if (response.user) {
-        user.value = response.user
-      }
       return true
     } catch {
       return false
     }
   }
 
-  async function login(email: string, password: string) {
+  async function login(data: ILogin): Promise<boolean> {
     try {
-      const response = await AuthAPI.login(email, password)
-      if (response.data.value) {
-        user.value = response.data.value.user
-      }
-      return response
+      const response = await AuthAPI.login(data)
+
+      user.value = response
+
+      return true
     } catch {
       return false
     }
@@ -38,115 +42,58 @@ export const useAuth = defineStore('auth', () => {
       if (user.value?._id) {
         return true
       }
+
       const response = await AuthAPI.refresh()
 
-      if (response.data.value?._id) {
-        user.value = response.data.value
-        return true
-      } else {
-        return false
-      }
-    } catch (error) {
-      await logout()
+      user.value = response
+
+      return true
+    } catch {
+      user.value = null
+
       return false
     }
   }
 
-  async function getAllUsers(): Promise<any> {
+  async function logout(): Promise<void> {
     try {
-      return await AuthAPI.getAllUsers()
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  // async function checkAdmin(): Promise<boolean | undefined> {
-  //   try {
-  //     if (!user.value?._id) {
-  //       const response = await AuthAPI.refresh()
-  //       if (response.data.value?._id) {
-  //         user.value = response.data.value
-  //       }
-  //     }
-
-  //     //array.some() проверяет, удовлетворяет ли хотя бы один элемент массива условию
-  //     const hasAdminRole = user?.value?.roles.some(role => role === 'admin');
-  //     return hasAdminRole
-  //   } catch (error) {
-  //     await logout()
-  //     return false
-  //   }
-  // }
-  // async function checkManager(): Promise<boolean | undefined> {
-  //   try {
-  //     if (!user.value?._id) {
-  //       const response = await AuthAPI.refresh()
-  //       if (response.data.value?._id) {
-  //         user.value = response.data.value
-  //       }
-  //     }
-
-  //     //array.some() проверяет, удовлетворяет ли хотя бы один элемент массива условию
-  //     const hasManagerRole = user?.value?.roles.some(role => role === 'manager');
-  //     return hasManagerRole
-  //   } catch (error) {
-  //     await logout()
-  //     return false
-  //   }
-  // }
-
-  async function logout(): Promise<any> {
-    try {
-      let res = await AuthAPI.logout()
-
+      await AuthAPI.logout()
+    } finally {
       user.value = null
-      useRouter().push('/')
-      return res
-    } catch { }
-  }
-
-  async function updateUser(newUser: any, userId: string) {
-    try {
-      let res = await AuthAPI.updateUser(newUser, userId);
-
-      if (res.status.value == 'success') {
-        user.value = res.data.value;
-      }
-
-      return res
-    } catch { }
-  }
-
-  async function sendResetLink(email: string): Promise<any> {
-    try {
-      return await AuthAPI.sendResetLink(email)
-    } catch (error) {
-      console.log(error);
+      
+      await router.push('/')
     }
   }
 
-  async function resetPassword(password: string, userId: string, token: string): Promise<any> {
+  async function updateUser(data: IUpdateUser): Promise<boolean> {
     try {
-      return await AuthAPI.resetPassword(password, userId, token)
-    } catch (error) {
-      console.log(error);
+      const response = await AuthAPI.updateUser(data)
+
+      user.value = response
+
+      return true
+    } catch {
+      return false
     }
   }
 
-  async function uploadAvatar(fd: FormData, userId: string) {
+  async function changePassword(data: IChangePassword): Promise<boolean> {
     try {
-      return await AuthAPI.uploadAvatar(fd, userId);
-    } catch (error) {
-      console.log(error);
+      const response = await AuthAPI.changePassword(data)
+
+      user.value = response
+
+      return true
+    } catch {
+      return false
     }
   }
 
   return {
-    // variables
+    // переменные
     user,
-    // functions
-    registration, login, checkAuth, logout,
-    updateUser, sendResetLink, resetPassword,
-    getAllUsers, uploadAvatar,
+    // функции
+    register, login, checkAuth, logout,
+    updateUser, changePassword,
   }
 })

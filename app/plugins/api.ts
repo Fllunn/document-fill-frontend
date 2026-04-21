@@ -2,31 +2,32 @@ import { toast } from 'vue3-toastify'
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
+  const requestHeaders = import.meta.server ? useRequestHeaders(['cookie']) : {}
 
   const $apiFetch = $fetch.create({
     baseURL: config.public.apiBase as string,
     credentials: 'include',
-    onRequest({ request, options, error }) {
 
+    onRequest({ options }) {
+      if (import.meta.server && requestHeaders.cookie) {
+        const headers = new Headers(options.headers)
+
+        headers.set('cookie', requestHeaders.cookie)
+
+        options.headers = headers
+      }
     },
-    onResponse({ response }) {
-      // response._data = new myBusinessResponse(response._data)
-    },
+
     onResponseError({ response }) {
-      if (response._data.message) {
-        if (process.client)
-          toast(response._data.message, { type: 'error' })
+      if (response._data?.message && import.meta.client) {
+        toast(response._data.message, { type: 'error' })
       }
-      if (response.status === 401) {
-        useState('authRedirect').value = useRoute().path
-        navigateTo('/')
-      }
-    }
+    },
   })
 
   return {
     provide: {
-      apiFetch: $apiFetch
-    }
+      apiFetch: $apiFetch,
+    },
   }
 })
