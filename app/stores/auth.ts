@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import AuthAPI from "../api/AuthApi"
+import { useAuthApi } from "../api/AuthApi"
 import { ref } from "vue"
 
 import type { IAuthUser } from "../types/auth/auth-user.interface"
@@ -10,6 +10,8 @@ import type { IChangePassword } from "~/types/auth/change-password.interface"
 
 export const useAuth = defineStore('auth', () => {
   const user = ref<IAuthUser | null>(null)
+  const AuthAPI = useAuthApi()
+  const router = useRouter()
 
   async function register(data: IRegister): Promise<boolean> {
     try {
@@ -59,7 +61,7 @@ export const useAuth = defineStore('auth', () => {
     } finally {
       user.value = null
       
-      await useRouter().push('/')
+      await router.push('/')
     }
   }
 

@@ -4,43 +4,35 @@ import type { IAuthUser } from "~/types/auth/auth-user.interface"
 import type { IUpdateUser } from "~/types/auth/update-user.interface"
 import type { IChangePassword } from "~/types/auth/change-password.interface"
 
-export default {
-  register(user: IRegister) {
-    const { $apiFetch } = useNuxtApp()
+export const useAuthApi = () => {
+  const { $apiFetch } = useNuxtApp()
 
-    return $apiFetch<IAuthUser>('/auth/register', { method: 'POST', body: user })
-  },
+  return {
+    register(user: IRegister) {
+      return $apiFetch<IAuthUser>('/auth/register', { method: 'POST', body: user })
+    },
 
-  login(user: ILogin) {
-    const { $apiFetch } = useNuxtApp()
-    
-    return $apiFetch<IAuthUser>('/auth/login', { method: 'POST', body: user })
-  },
+    login(user: ILogin) {
+      return $apiFetch<IAuthUser>('/auth/login', { method: 'POST', body: user })
+    },
 
-  refresh() {
-    const { $apiFetch } = useNuxtApp()
+    refresh() {
+      return $apiFetch<IAuthUser>('/auth/refresh', { method: 'GET' })
+    },
 
-    return $apiFetch<IAuthUser>('/auth/refresh', { method: 'GET' })
-  },
+    logout() {
+      return $apiFetch<void>('/auth/logout', { method: 'POST' })
+    },
 
-  logout() {
-    const { $apiFetch } = useNuxtApp()
+    updateUser(user: IUpdateUser) {
+      return $apiFetch<IAuthUser>('/auth/update', { method: 'POST', body: { user } })
+    },
 
-    return $apiFetch<void>('/auth/logout', { method: 'POST' })
-  },
-
-  updateUser(user: IUpdateUser) {
-    const { $apiFetch } = useNuxtApp()
-
-    return $apiFetch<IAuthUser>('/auth/update', { method: 'POST', body: { user } })
-  },
-
-  changePassword(user: IChangePassword) {
-    const { $apiFetch } = useNuxtApp()
-    
-    return $apiFetch<IAuthUser>('/auth/password/change', {
-      method: 'POST',
-      body: user,
-    })
-  },
+    changePassword(user: IChangePassword) {
+      return $apiFetch<IAuthUser>('/auth/password/change', {
+        method: 'POST',
+        body: user,
+      })
+    },
+  }
 }
