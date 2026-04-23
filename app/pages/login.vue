@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useField, useForm } from 'vee-validate'
+import isEmail from 'validator/lib/isEmail'
 
 const router = useRouter()
 const auth = useAuth()
@@ -18,9 +19,7 @@ const { meta, handleSubmit } = useForm<LoginForm>({
     email: (value: string) => {
       if (!value) return 'Введите почту'
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-      if (!emailRegex.test(value)) return 'Введите корректную почту'
+      if (!isEmail(value)) return 'Введите корректную почту'
 
       if (value.length > 300) return 'Почта должна содержать не более 300 символов'
 
