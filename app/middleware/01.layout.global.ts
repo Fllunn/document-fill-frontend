@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware((to, from) => {
-  const { isAdmin, isManager, isEmployee, isEmployer } = useRole();
+  const { isAdmin } = useRole();
 
   if (isAdmin.value) {
     return setPageLayout("admin")
