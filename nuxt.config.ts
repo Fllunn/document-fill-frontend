@@ -2,7 +2,7 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  css: ['~/assets/styles/main.scss', 'vuetify/styles'],
+  css: ['~/assets/styles/fonts.css', '~/assets/styles/main.scss', 'vuetify/styles'],
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   runtimeConfig: {
@@ -18,11 +18,6 @@ export default defineNuxtConfig({
         config.plugins.push(vuetify({ autoImport: true }))
       })
     },
-    ['@nuxtjs/google-fonts', {
-      families: {
-        Montserrat: [100, 200, 300, 400, 500, 600, 700, 800, 900]
-      }
-    }],
   ],
     build: {
     transpile: ['vuetify'],
