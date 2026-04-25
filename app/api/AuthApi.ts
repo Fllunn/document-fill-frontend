@@ -25,7 +25,7 @@ export const useAuthApi = () => {
     },
 
     updateUser(user: IUpdateUser) {
-      return $apiFetch<IAuthUser>('/auth/update', { method: 'POST', body: { user } })
+      return $apiFetch<IAuthUser>('/auth/update', { method: 'POST', body: user })
     },
 
     changePassword(user: IChangePassword) {
