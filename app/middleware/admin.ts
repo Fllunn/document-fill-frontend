@@ -1,15 +1,13 @@
-export default defineNuxtRouteMiddleware((to, from) => {
-  const auth = useAuth();
-  
-  // Если пользователь не авторизован
-  if (!auth.user?._id) {
-    return navigateTo("/login");
+export default defineNuxtRouteMiddleware(async () => {
+  const auth = useAuth()
+
+  const isAuth = auth.user?._id ? true : await auth.checkAuth()
+
+  if (!isAuth) {
+    return navigateTo('/login')
   }
-  
-  // Если у пользователя нет роли админа
+
   if (!auth.user?.roles?.includes('admin')) {
-    return navigateTo("/cabinet/me");
+    return navigateTo('/cabinet')
   }
-  
-  return true;
 })

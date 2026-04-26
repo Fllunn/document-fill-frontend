@@ -4,10 +4,12 @@ definePageMeta({ middleware: 'auth' })
 
 <template>
   <v-card>
-    <v-card-title>Данные аккаунта</v-card-title>
+    <v-card-title>
+      Данные аккаунта
+    </v-card-title>
 
     <v-card-text>
-      Форма изменения имени и email будет здесь
+      <CabinetSettingsProfileForm />
     </v-card-text>
   </v-card>
 </template>

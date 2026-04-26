@@ -1,4 +1,9 @@
 <script setup lang="ts">
+
+definePageMeta({
+  middleware: 'login',
+})
+
 import { useField, useForm } from 'vee-validate'
 import isEmail from 'validator/lib/isEmail'
 
