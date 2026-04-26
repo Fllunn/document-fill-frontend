@@ -1,15 +1,27 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
+
+const auth = useAuth()
 </script>
 
 <template>
-  <v-card>
-    <v-card-title>
-      Данные аккаунта
-    </v-card-title>
+  <v-row>
+    <v-col cols="12">
+      <CabinetSettingsActionItem
+        icon="mdi-account-edit-outline"
+        title="Имя"
+        :description="`Ваше имя: ${ auth.user?.name }. Вы можете его изменить`"
+        action-text="Изменить"
+      />
+    </v-col>
 
-    <v-card-text>
-      <CabinetSettingsProfileForm />
-    </v-card-text>
-  </v-card>
+    <v-col cols="12">
+      <CabinetSettingsActionItem
+        icon="mdi-email-edit-outline"
+        title="Почта"
+        :description="`Ваш аккаунт привязан к почте ${auth.user?.email}`"
+        action-text="Изменить"
+      />
+    </v-col>
+  </v-row>
 </template>

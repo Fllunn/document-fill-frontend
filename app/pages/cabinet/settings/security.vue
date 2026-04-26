@@ -6,19 +6,10 @@ definePageMeta({ middleware: 'auth' })
   <v-row>
     <v-col cols="12">
       <CabinetSettingsActionItem
-        icon="mdi-lock-outline"
+        icon="mdi-key-outline"
         title="Пароль"
-        description="Изменение пароля для входа в аккаунт"
+        description="Пароль это ключ к вашей учетной записи. Никому его не сообщайте. При необходимости Вы можете изменить его"
         action-text="Изменить"
-      />
-    </v-col>
-
-    <v-col cols="12">
-      <CabinetSettingsActionItem
-        icon="mdi-shield-check-outline"
-        title="Двухфакторная аутентификация"
-        description="Дополнительная защита аккаунта при входе"
-        action-text="Настроить"
       />
     </v-col>
   </v-row>
