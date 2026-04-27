@@ -67,6 +67,8 @@ export const useAuth = defineStore('auth', () => {
 
   async function updateUser(data: IUpdateUser): Promise<boolean> {
     try {
+      await AuthAPI.refresh()
+
       const response = await AuthAPI.updateUser(data)
 
       user.value = response
