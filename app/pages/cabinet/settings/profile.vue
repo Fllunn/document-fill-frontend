@@ -29,15 +29,10 @@ const isNameDialogOpen = ref(false)
     </v-col>
   </v-row>
 
-  <v-dialog v-model="isNameDialogOpen" max-width="clamp(320px, 90vw, 512px)">
-    <v-card>
-      <v-card-title>
-        Изменить имя
-      </v-card-title>
-
-      <v-card-text>
-        <CabinetSettingsProfileForm />
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+  <CabinetSettingsDialog
+    v-model="isNameDialogOpen"
+    title="Изменить имя"
+  >
+    <CabinetSettingsProfileForm />
+  </CabinetSettingsDialog>
 </template>
