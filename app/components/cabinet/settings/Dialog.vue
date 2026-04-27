@@ -2,12 +2,14 @@
 type Props = {
   modelValue: boolean
   title: string
+  description?: string
   submitText?: string
   loading?: boolean
   disabled?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
+  description: '',
   submitText: 'Сохранить',
   loading: false,
   disabled: false,
@@ -48,6 +50,13 @@ function close(): void {
           </v-col>
         </v-row>
       </v-card-title>
+
+      <v-card-subtitle
+        v-if="description"
+        class="text-center text-wrap"
+      >
+        {{ description }}
+      </v-card-subtitle>
 
       <v-card-text class="pb-0 text-center">
         <slot />
