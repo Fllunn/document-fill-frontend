@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useField, useForm } from 'vee-validate'
-import { ref } from 'vue'
 
 const router = useRouter()
 const auth = useAuth()
@@ -34,7 +33,6 @@ const email = useField<string>('email')
 const password = useField<string>('password')
 const agreement = useField<boolean>('agreement')
 
-const isShowPassword = ref(false)
 const loading = ref(false)
 
 const submit = handleSubmit(async (values) => {
@@ -70,37 +68,30 @@ const submit = handleSubmit(async (values) => {
         <v-form class="mt-6 w-100" @submit.prevent="submit">
           
           <!-- Имя -->
-          <v-text-field
+          <UiTextField
             v-model="name.value.value"
             :error-messages="name.errorMessage.value"
             label="Имя"
             placeholder="Иван"
-            variant="outlined"
-            prepend-inner-icon="mdi-emoticon-dead"
+            prepend-inner-icon="mdi-account-circle-outline"
           />
 
           <!-- Почта -->
-          <v-text-field
+          <UiTextField
             v-model="email.value.value"
             :error-messages="email.errorMessage.value"
             label="Почта"
             type="email"
             placeholder="ivan@gmail.com"
-            variant="outlined"
             prepend-inner-icon="mdi-email-outline"
           />
 
           <!-- Пароль -->
-          <v-text-field
+          <UiPasswordField
             v-model="password.value.value"
             :error-messages="password.errorMessage.value"
-            :append-inner-icon="isShowPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="isShowPassword ? 'text' : 'password'"
             label="Пароль"
             placeholder="Введите пароль"
-            variant="outlined"
-            prepend-inner-icon="mdi-lock-outline"
-            @click:append-inner="isShowPassword = !isShowPassword"
           />
 
           <v-checkbox
