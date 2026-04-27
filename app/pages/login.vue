@@ -5,7 +5,6 @@ definePageMeta({
 })
 
 import { useField, useForm } from 'vee-validate'
-import isEmail from 'validator/lib/isEmail'
 
 const router = useRouter()
 const auth = useAuth()
@@ -15,31 +14,16 @@ type LoginForm = {
   password: string
 }
 
+const { emailRule, passwordRule } = useValidationRules()
+
 const { meta, handleSubmit } = useForm<LoginForm>({
   initialValues: {
     email: '',
     password: '',
   },
   validationSchema: {
-    email: (value: string) => {
-      if (!value) return 'Введите почту'
-
-      if (!isEmail(value)) return 'Введите корректную почту'
-
-      if (value.length > 300) return 'Почта должна содержать не более 300 символов'
-
-      return true
-    },
-
-    password: (value: string) => {
-      if (!value) return 'Введите пароль'
-
-      if (value.length < 8) return 'Пароль должен содержать не менее 8 символов'
-
-      if (value.length > 50) return 'Пароль должен содержать не более 50 символов'
-
-      return true
-    },
+    email: emailRule,
+    password: passwordRule,
   },
 })
 

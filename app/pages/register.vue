@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useField, useForm } from 'vee-validate'
 import { ref } from 'vue'
-import isEmail from 'validator/lib/isEmail'
 
 const router = useRouter()
 const auth = useAuth()
@@ -13,6 +12,8 @@ type RegistrationForm = {
   agreement: boolean
 }
 
+const { emailRule, passwordRule, nameRule, agreementRule } = useValidationRules()
+
 const { meta, handleSubmit } = useForm<RegistrationForm>({
   initialValues: {
     name: '',
@@ -21,41 +22,10 @@ const { meta, handleSubmit } = useForm<RegistrationForm>({
     agreement: false,
   },
   validationSchema: {
-    name: (value: string) => {
-      if (!value) return 'Введите имя'
-
-      if (value.length < 2) return 'Имя должно содержать не менее 2 символов'
-
-      if (value.length > 50) return 'Имя должно содержать не более 50 символов'
-
-      return true
-    },
-
-    email: (value: string) => {
-      if (!value) return 'Введите почту'
-
-      if (!isEmail(value)) return 'Введите корректную почту'
-
-      if (value.length > 300) return 'Почта должна содержать не более 300 символов'
-
-      return true
-    },
-
-    password: (value: string) => {
-      if (!value) return 'Введите пароль'
-
-      if (value.length < 8) return 'Пароль должен содержать не менее 8 символов'
-
-      if (value.length > 50) return 'Пароль должен содержать не более 50 символов'
-
-      return true
-    },
-
-    agreement: (value: boolean) => {
-      if (!value) return 'Вы должны принять соглашение на обработку данных'
-
-      return true
-    },
+    name: nameRule,
+    email: emailRule,
+    password: passwordRule,
+    agreement: agreementRule,
   },
 })
 

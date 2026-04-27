@@ -2,6 +2,9 @@
 definePageMeta({ middleware: 'auth' })
 
 const auth = useAuth()
+
+const isNameDialogOpen = ref(false)
+
 </script>
 
 <template>
@@ -12,6 +15,7 @@ const auth = useAuth()
         title="Имя"
         :description="`Ваше имя: ${ auth.user?.name }. Вы можете его изменить`"
         action-text="Изменить"
+        @action="isNameDialogOpen = true"
       />
     </v-col>
 
@@ -24,4 +28,16 @@ const auth = useAuth()
       />
     </v-col>
   </v-row>
+
+  <v-dialog v-model="isNameDialogOpen" max-width="clamp(320px, 90vw, 512px)">
+    <v-card>
+      <v-card-title>
+        Изменить имя
+      </v-card-title>
+
+      <v-card-text>
+        <CabinetSettingsProfileForm />
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
