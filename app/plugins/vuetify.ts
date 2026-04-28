@@ -23,6 +23,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 		},
 		defaults: {
 			VBtn: {
+        rounded: 'xl',
 				style: 'text-transform: none; letter-spacing: normal',
 			},
 			global: {

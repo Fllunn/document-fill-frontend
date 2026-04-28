@@ -1,28 +1,16 @@
 <script setup lang="ts">
-// import { useTheme } from "vuetify"
 
-// const theme = useTheme()
-const router = useRouter()
-// const savedTheme = useCookie('theme')
-const userStore = useAuth();
-
-let drawer = ref(false);
-let dialog = ref(false);
-
-// if (['light', 'dark'].includes(String(savedTheme.value))) {
-//   theme.global.name.value = String(savedTheme.value);
-// }
+const auth = useAuth()
 
 
-// function toggleTheme() {
-//   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark"
-//   savedTheme.value = theme.global.name.value
-// }
+const userFirstLetter = computed(() => {
+  if (!auth.user?.name) {
+    return ''
+  }
 
-async function logOut() {
-  dialog.value = false;
-  await userStore.logout();
-}
+  return auth.user.name.charAt(0).toUpperCase()
+})
+
 </script>
 
 <template>
@@ -35,11 +23,25 @@ async function logOut() {
 
         <v-spacer></v-spacer>
 
-        <div class="d-flex align-center">
-          <div class="d-flex align-center cursor-pointer" @click="router.push('/cabinet')">
-            ЛК
-          </div>
-        </div>
+        <template v-if="userFirstLetter">
+          <v-btn to="/cabinet" icon variant="text">
+            <v-avatar size="48" color="grey-lighten-3">
+              {{ userFirstLetter }}
+            </v-avatar>
+          </v-btn>
+        </template>
+        
+        <template v-else>
+          <v-btn to="/login" variant="outlined" class="mr-2" :active="false">
+            Войти
+          </v-btn>
+
+          <v-btn to="/register" variant="flat" color="primary">
+            Регистрация
+          </v-btn>
+        </template>
+
+        
       </v-container>
     </v-app-bar>
 
