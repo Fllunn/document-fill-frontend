@@ -64,7 +64,7 @@ const updatePassword = handlePasswordSubmit(async (values) => {
     }
 
     isPasswordDialogOpen.value = false
-    
+
     toast('Пароль успешно изменен', { type: 'success' })
   } finally {
     loading.value = false
@@ -100,21 +100,21 @@ const updatePassword = handlePasswordSubmit(async (values) => {
       :error-messages="oldPassword.errorMessage.value"
       label="Текущий пароль"
       placeholder="Введите текущий пароль"
-      prepend-inner-icon="mdi-key-outline"
+      prepend-inner-icon="mdi-lock-outline"
     />
     <UiPasswordField
       v-model="newPassword.value.value"
       :error-messages="newPassword.errorMessage.value"
       label="Новый пароль"
       placeholder="Введите новый пароль"
-      prepend-inner-icon="mdi-key-outline"
+      prepend-inner-icon="mdi-lock-check-outline"
     />
     <UiPasswordField
       v-model="confirmPassword.value.value"
       :error-messages="confirmPassword.errorMessage.value"
       label="Подтверждение нового пароля"
       placeholder="Подтвердите новый пароль"
-      prepend-inner-icon="mdi-key-outline"
+      prepend-inner-icon="mdi-lock-check-outline"
     />
   </CabinetSettingsDialog>
 </template>
