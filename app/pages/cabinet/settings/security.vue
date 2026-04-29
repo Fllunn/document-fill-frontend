@@ -101,6 +101,7 @@ const updatePassword = handlePasswordSubmit(async (values) => {
       label="Текущий пароль"
       placeholder="Введите текущий пароль"
       prepend-inner-icon="mdi-lock-outline"
+      autofocus
     />
     <UiPasswordField
       v-model="newPassword.value.value"

@@ -31,5 +31,6 @@ const emit = defineEmits<{
     variant="outlined"
     class="mb-2"
     @update:model-value="emit('update:modelValue', $event)"
+    autofocus
   />
 </template>
