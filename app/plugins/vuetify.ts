@@ -26,6 +26,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         rounded: 'xl',
 				style: 'text-transform: none; letter-spacing: normal',
 			},
+      VCard: {
+        rounded: 'lg',
+      },
+      VTextField: {
+        rounded: 'xl',
+      },
 			global: {
 				ripple: false,
 			},

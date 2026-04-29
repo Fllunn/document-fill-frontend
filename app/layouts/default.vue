@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 const auth = useAuth()
-
+const isLogoutDialogOpen = ref(false)
 
 const userFirstLetter = computed(() => {
   if (!auth.user?.name) {
@@ -10,6 +10,12 @@ const userFirstLetter = computed(() => {
 
   return auth.user.name.charAt(0).toUpperCase()
 })
+
+async function logout(): Promise<void> {
+  isLogoutDialogOpen.value = false
+
+  await auth.logout()
+}
 
 </script>
 
@@ -24,11 +30,41 @@ const userFirstLetter = computed(() => {
         <v-spacer></v-spacer>
 
         <template v-if="userFirstLetter">
-          <v-btn to="/cabinet" icon variant="text">
-            <v-avatar size="48" color="grey-lighten-3">
-              {{ userFirstLetter }}
-            </v-avatar>
-          </v-btn>
+          <v-menu location="bottom end">
+            <template #activator="{ props }">
+              <v-btn v-bind="props" variant="text" class="pl-0">
+                <template #prepend>
+                  <v-avatar size="36" color="grey-lighten-3" class="border">
+                    {{ userFirstLetter }}
+                  </v-avatar>
+                </template>
+                
+
+                <v-icon icon="mdi-chevron-down"/>
+              </v-btn>
+            </template>
+
+            <v-list rounded="xl">
+              <v-list-item to="/cabinet" prepend-icon="mdi-home-outline" rounded="xl">
+                <v-list-item-title>Личный кабинет</v-list-item-title>
+              </v-list-item>
+
+              <v-list-item to="/cabinet/settings" prepend-icon="mdi-cog-outline" rounded="xl">
+                <v-list-item-title>Настройки</v-list-item-title>
+              </v-list-item>
+
+              <v-divider></v-divider>
+
+              <v-list-item
+                prepend-icon="mdi-logout"
+                base-color="error"
+                @click="isLogoutDialogOpen = true"
+                rounded="xl"
+              >
+                <v-list-item-title>Выйти</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </template>
         
         <template v-else>
@@ -48,6 +84,14 @@ const userFirstLetter = computed(() => {
     <v-main>
       <slot />
     </v-main>
+
+    <CabinetSettingsDialog
+      v-model="isLogoutDialogOpen"
+      title="Выход из аккаунта"
+      description="Вы уверены, что хотите выйти из аккаунта?"
+      submit-text="Выйти"
+      @submit="logout"
+    />
 
     <Footer />
   </v-app>

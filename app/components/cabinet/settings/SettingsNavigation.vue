@@ -19,7 +19,8 @@ const items = [
       v-for="item in items"
       :key="item.to"
       :to="item.to"
-      :prepend-icon="item.icon" 
+      :prepend-icon="item.icon"
+      rounded="lg"
     >
       <template #title>
         <span class="title">
