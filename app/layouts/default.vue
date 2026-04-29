@@ -2,6 +2,7 @@
 
 const auth = useAuth()
 const isLogoutDialogOpen = ref(false)
+const loading = ref(false)
 
 const userFirstLetter = computed(() => {
   if (!auth.user?.name) {
@@ -12,9 +13,14 @@ const userFirstLetter = computed(() => {
 })
 
 async function logout(): Promise<void> {
-  isLogoutDialogOpen.value = false
+  loading.value = true
 
-  await auth.logout()
+  try {
+    await auth.logout()
+  } finally {
+    loading.value = false
+    isLogoutDialogOpen.value = false
+  }
 }
 
 </script>
@@ -39,8 +45,7 @@ async function logout(): Promise<void> {
                   </v-avatar>
                 </template>
                 
-
-                <v-icon icon="mdi-chevron-down"/>
+                <v-icon icon="mdi-chevron-down" />
               </v-btn>
             </template>
 
@@ -90,6 +95,7 @@ async function logout(): Promise<void> {
       title="Выход из аккаунта"
       description="Вы уверены, что хотите выйти из аккаунта?"
       submit-text="Выйти"
+      :loading="loading"
       @submit="logout"
     />
 
