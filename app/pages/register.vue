@@ -1,4 +1,9 @@
 <script setup lang="ts">
+
+definePageMeta({
+  middleware: 'login',
+})
+
 import { useField, useForm } from 'vee-validate'
 
 const router = useRouter()
@@ -57,8 +62,6 @@ const submit = handleSubmit(async (values) => {
 
 <template>
   <v-container>
-    <BackButton />
-
     <v-col cols="12" xs="12" sm="10" md="7" lg="5" class="mt-4 ma-auto">
       <v-card class="d-flex flex-column justify-center align-center text-center w-100 pa-6 rounded-lg">
 
@@ -74,6 +77,7 @@ const submit = handleSubmit(async (values) => {
             label="Имя"
             placeholder="Иван"
             prepend-inner-icon="mdi-account-circle-outline"
+            autofocus
           />
 
           <!-- Почта -->
@@ -84,6 +88,7 @@ const submit = handleSubmit(async (values) => {
             type="email"
             placeholder="ivan@gmail.com"
             prepend-inner-icon="mdi-email-outline"
+            :autofocus="false"
           />
 
           <!-- Пароль -->
@@ -97,8 +102,29 @@ const submit = handleSubmit(async (values) => {
           <v-checkbox
             v-model="agreement.value.value"
             :error-messages="agreement.errorMessage.value"
-            label="Я согласен на обработку и хранение своих персональных данных"
-          />
+            class="text-left"
+          >
+            <template #label>
+              <span>
+                Я согласен с
+                <NuxtLink
+                  to="/documents/privacy-policy"
+                  class="text-primary text-decoration-none"
+                  @click.stop
+                >
+                  политикой конфиденциальности
+                </NuxtLink>
+                и
+                <NuxtLink
+                  to="/documents/terms-of-use"
+                  class="text-primary text-decoration-none"
+                  @click.stop
+                >
+                  пользовательским соглашением
+                </NuxtLink>
+              </span>
+            </template>
+          </v-checkbox>
 
           <v-btn
             type="submit"
@@ -111,7 +137,18 @@ const submit = handleSubmit(async (values) => {
           </v-btn>
 
         </v-form>
-        
+
+        <v-card-text class="text-subtitle-1 w-100 mt-4 pa-0">
+
+          Уже есть аккаунт?
+          <NuxtLink
+            to="/login"
+            class="font-weight-bold text-primary text-decoration-none"
+          >
+            Войти
+          </NuxtLink>
+
+        </v-card-text>
       </v-card>
     </v-col>
   </v-container>
