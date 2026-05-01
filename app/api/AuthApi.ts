@@ -28,6 +28,10 @@ export const useAuthApi = () => {
       return $apiFetch<IAuthUser>('/auth/update', { method: 'POST', body: user })
     },
 
+    deleteUser(password: string) {
+      return $apiFetch('/auth/delete', { method: 'DELETE', body: { password } })
+    },
+
     changePassword(user: IChangePassword) {
       return $apiFetch<IAuthUser>('/auth/password/change', {
         method: 'POST',

@@ -89,11 +89,25 @@ export const useAuth = defineStore('auth', () => {
     }
   }
 
+  async function deleteUser(password: string): Promise<boolean> {
+    try {
+      await AuthAPI.deleteUser(password)
+
+      user.value = null
+      
+      await router.push('/')
+
+      return true
+    } catch {
+      return false
+    }
+  }
+
   return {
     // переменные
     user,
     // функции
     register, login, checkAuth, logout,
-    updateUser, changePassword,
+    updateUser, changePassword, deleteUser,
   }
 })
