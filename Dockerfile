@@ -1,6 +1,4 @@
-FROM node:20.17.0-alpine AS base
-
-RUN apk add --no-cache libc6-compat
+FROM node:20.17.0-slim AS base
 
 WORKDIR /app
 
@@ -14,7 +12,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20.17.0-alpine AS production
+FROM node:20.17.0-slim AS production
 
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -24,5 +22,7 @@ WORKDIR /app
 COPY --from=build /app/.output ./.output
 
 EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]
 
 CMD ["node", ".output/server/index.mjs"]
