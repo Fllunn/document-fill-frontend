@@ -59,12 +59,14 @@ const submit = handleSubmit(async (values) => {
   <v-container>
     <BackButton />
 
-    <v-col cols="12" xs="12" sm="10" md="7" lg="5" class="mt-4 ma-auto">
-      <v-card class="d-flex flex-column justify-center align-center text-center w-100 pa-6 rounded-lg">
-
-        <h2>Начните создавать документы</h2>
-        <h3>Все необходимое для работы с шаблонами</h3>
+    <v-col cols="12" xs="12" sm="10" md="7" lg="5" class="mt-4 ma-auto" >
+      <v-card class="d-flex flex-column justify-center align-center text-center w-100 pa-6 rounded-xl">
         
+        <v-img src="/icons/pen-with-copybook.svg" width="63" height="59"/>
+
+        <v-card-title>Начните создавать документы</v-card-title>
+        <v-card-subtitle>Все необходимое для работы с шаблонами</v-card-subtitle>
+
         <v-form class="mt-6 w-100" @submit.prevent="submit">
           
           <!-- Имя -->
@@ -102,7 +104,7 @@ const submit = handleSubmit(async (values) => {
 
           <v-btn
             type="submit"
-            color="accent"
+            color="primary"
             class="mt-4 w-100"
             :disabled="!meta.valid"
             :loading="loading"
