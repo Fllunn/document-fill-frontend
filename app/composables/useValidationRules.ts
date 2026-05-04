@@ -37,10 +37,17 @@ export const useValidationRules = () => {
     return true
   }
 
+  const deleteUserRule = (value: boolean) => {
+    if (!value) return 'Вы должны подтвердить удаление аккаунта'
+
+    return true
+  }
+
   return {
     emailRule,
     passwordRule,
     nameRule,
     agreementRule,
+    deleteUserRule,
   }
 }
