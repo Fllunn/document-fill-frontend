@@ -47,6 +47,13 @@ async function deleteTemplate(templateId: string): Promise<void> {
   }
 }
 
+const userTemplateCols = computed(() => {
+  const n = userTemplates.value.length
+  if (n === 1) return { cols: 12 }
+  if (n === 2) return { cols: 12, sm: 6 }
+  return { cols: 12, sm: 6, md: 4 }
+})
+
 onMounted(fetchTemplates)
 </script>
 
@@ -74,7 +81,9 @@ onMounted(fetchTemplates)
           Нет загруженных шаблонов
         </v-col>
 
-        <v-col v-for="template in userTemplates" :key="template._id" cols="12">
+        <v-col v-for="template in userTemplates" :key="template._id"
+        v-bind="userTemplateCols"
+        >
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
@@ -92,7 +101,7 @@ onMounted(fetchTemplates)
           Нет системных шаблонов
         </v-col>
 
-        <v-col v-for="template in systemTemplates" :key="template._id" cols="12">
+        <v-col v-for="template in systemTemplates" :key="template._id" cols="12" sm="6" md="4">
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
