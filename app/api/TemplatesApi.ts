@@ -55,4 +55,10 @@ export default {
 
     return $apiFetch<Record<string, string[]>>(`/templates/${templateId}/variables`, { method: 'GET' })
   },
+
+  download(templateId: string): Promise<Blob> {
+    const { $apiFetch } = useNuxtApp()
+
+    return $apiFetch<Blob>(`/templates/${templateId}/download`, { method: 'GET', responseType: 'blob' })
+  },
 }

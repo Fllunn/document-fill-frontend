@@ -20,6 +20,17 @@ async function fetchTemplates(): Promise<void> {
   }
 }
 
+async function downloadTemplate(templateId: string, name: string): Promise<void> {
+  const blob = await TemplatesApi.download(templateId)
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  
+  a.href = url
+  a.download = `${name}.docx`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 async function deleteTemplate(templateId: string): Promise<void> {
   const saveTemplates = templates.value
   templates.value = templates.value.filter((t) => t._id !== templateId)
@@ -63,6 +74,7 @@ onMounted(fetchTemplates)
             :title="template.name"
             action-icon="mdi-download-outline"
             delete-icon="mdi-delete-outline"
+            @action="downloadTemplate(template._id, template.name)"
             @delete="deleteTemplate(template._id)"
           />
         </v-col>
@@ -80,6 +92,7 @@ onMounted(fetchTemplates)
             :title="template.name"
             action-icon="mdi-download-outline"
             delete-icon="mdi-delete-outline"
+            @action="downloadTemplate(template._id, template.name)"
             @delete="deleteTemplate(template._id)"
           />
         </v-col>
