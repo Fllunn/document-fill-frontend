@@ -30,7 +30,7 @@ export default {
     return $apiFetch<boolean>(`/templates/${templateId}`, { method: 'DELETE' })
   },
 
-  update(templateId: string, template?: Partial<ITemplateToEdit>, file?: File): Promise<ITemplateToEdit> {
+  update(templateId: string, template?: Pick<ITemplateToEdit, 'name'>, file?: File): Promise<ITemplateToEdit> {
     const { $apiFetch } = useNuxtApp()
 
     const formData = new FormData()

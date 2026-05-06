@@ -5,6 +5,8 @@ import { useUploadTemplate } from '~/composables/Templates/useUploadTemplate'
 const { state, createFromFile } = useUploadTemplate()
 const { isAdmin } = useRole()
 
+const emit = defineEmits<{ uploaded: [] }>()
+
 const MAX_SIZE = 512 * 1024
 
 const file = ref<File | null>(null)
@@ -47,6 +49,7 @@ async function submit() {
     file.value = null
     isSystem.value = false
     state.value = null
+    emit('uploaded')
   }
 }
 </script>

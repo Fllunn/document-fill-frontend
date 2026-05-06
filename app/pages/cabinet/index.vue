@@ -1,25 +1,89 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
-const auth = useAuth();
 
+import TemplatesApi from '~/api/TemplatesApi'
+import type { ITemplate } from '~/types/template.interface'
+
+const templates = ref<ITemplate[]>([])
+const loading = ref(false)
+
+const systemTemplates = computed(() => templates.value.filter((t) => t.storageType === 'system'))
+const userTemplates = computed(() => templates.value.filter((t) => t.storageType === 'user'))
+
+async function fetchTemplates(): Promise<void> {
+  loading.value = true
+
+  try {
+    templates.value = await TemplatesApi.getAll()
+  } finally {
+    loading.value = false
+  }
+}
+
+async function deleteTemplate(templateId: string): Promise<void> {
+  const saveTemplates = templates.value
+  templates.value = templates.value.filter((t) => t._id !== templateId)
+
+  try {
+    await TemplatesApi.delete(templateId)
+  } catch {
+    templates.value = saveTemplates
+  }
+}
+
+onMounted(fetchTemplates)
 </script>
 
 <template>
   <v-container>
     <v-row>
-      
       <v-col cols="12">
         <h1>Шаблоны</h1>
       </v-col>
 
       <v-col cols="12">
-        <TemplatesTemplateUploadForm />
+        <TemplatesTemplateUploadForm @uploaded="fetchTemplates" />
       </v-col>
 
-      <v-col cols="12">
-        <h2>Загруженные шаблоны</h2>
+      <v-col v-if="loading" cols="12" class="d-flex justify-center">
+        <v-progress-circular indeterminate />
       </v-col>
 
+      <template v-else>
+        <v-col cols="12">
+          <h2>Системные шаблоны</h2>
+        </v-col>
+
+        <v-col v-if="systemTemplates.length === 0" cols="12">
+          Нет системных шаблонов
+        </v-col>
+
+        <v-col v-for="template in systemTemplates" :key="template._id" cols="12">
+          <TemplatesFileCard
+            :title="template.name"
+            action-icon="mdi-download-outline"
+            delete-icon="mdi-delete-outline"
+            @delete="deleteTemplate(template._id)"
+          />
+        </v-col>
+
+        <v-col cols="12">
+          <h2>Мои шаблоны</h2>
+        </v-col>
+
+        <v-col v-if="userTemplates.length === 0" cols="12">
+          Нет загруженных шаблонов
+        </v-col>
+
+        <v-col v-for="template in userTemplates" :key="template._id" cols="12">
+          <TemplatesFileCard
+            :title="template.name"
+            action-icon="mdi-download-outline"
+            delete-icon="mdi-delete-outline"
+            @delete="deleteTemplate(template._id)"
+          />
+        </v-col>
+      </template>
     </v-row>
   </v-container>
 </template>
