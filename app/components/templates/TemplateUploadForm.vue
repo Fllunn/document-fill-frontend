@@ -50,6 +50,8 @@ async function submit() {
     isSystem.value = false
     state.value = null
     emit('uploaded')
+
+    toast('Шаблон успешно загружен', { type: 'success' })
   }
 }
 </script>
