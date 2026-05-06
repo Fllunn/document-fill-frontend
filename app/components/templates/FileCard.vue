@@ -11,21 +11,24 @@ type Props = {
   subtitle?: string
   prependIcon?: string
   actionButton?: ButtonConfig
+  renameButton?: ButtonConfig
   deleteButton?: ButtonConfig
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{ action: []; delete: [] }>()
+const emit = defineEmits<{ action: []; rename: []; delete: [] }>()
 
 const buttons = computed(() => [
   props.actionButton ? { config: props.actionButton, event: 'action' as const } : null,
+  props.renameButton ? { config: props.renameButton, event: 'rename' as const } : null,
   props.deleteButton ? { config: props.deleteButton, event: 'delete' as const } : null,
 ].filter((b): b is NonNullable<typeof b> => b !== null))
 
-const menuOpen = ref<Record<string, boolean>>({ action: false, delete: false })
+const menuOpen = ref<Record<string, boolean>>({ action: false, rename: false, delete: false })
 
-function handleEmit(event: 'action' | 'delete') {
+function handleEmit(event: 'action' | 'rename' | 'delete') {
   if (event === 'action') emit('action')
+  else if (event === 'rename') emit('rename')
   else emit('delete')
 }
 </script>

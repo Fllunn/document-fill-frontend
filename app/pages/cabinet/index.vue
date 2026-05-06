@@ -2,6 +2,7 @@
 definePageMeta({ middleware: 'auth' })
 
 import { toast } from 'vue3-toastify'
+import { useField, useForm } from 'vee-validate'
 import TemplatesApi from '~/api/TemplatesApi'
 import type { ITemplate } from '~/types/template.interface'
 
@@ -46,6 +47,51 @@ async function deleteTemplate(templateId: string): Promise<void> {
     templates.value = saveTemplates
   }
 }
+
+const { nameRule } = useValidationRules()
+
+const isRenameDialogOpen = ref(false)
+const renameId = ref<string | null>(null)
+const renamePlaceholder = ref('')
+
+const {
+  meta: renameMeta,
+  handleSubmit: handleRenameSubmit,
+  resetForm: resetRenameForm,
+} = useForm({
+  initialValues: { name: '' },
+  validationSchema: { name: nameRule },
+})
+
+const renameName = useField<string>('name')
+
+watch(isRenameDialogOpen, (isOpen) => {
+  if (!isOpen) resetRenameForm()
+})
+
+function openRenameDialog(templateId: string, currentName: string) {
+  renameId.value = templateId
+  renamePlaceholder.value = currentName
+  isRenameDialogOpen.value = true
+}
+
+const renameTemplate = handleRenameSubmit(async (values) => {
+  const id = renameId.value!
+  const oldTemplates = templates.value
+
+  templates.value = templates.value.map((t) =>
+    t._id === id ? { ...t, name: values.name } : t,
+  )
+  isRenameDialogOpen.value = false
+
+  try {
+    await TemplatesApi.update(id, { name: values.name })
+
+    toast('Шаблон успешно переименован', { type: 'success' })
+  } catch {
+    templates.value = oldTemplates
+  }
+})
 
 const userTemplateCols = computed(() => {
   const countTemplates = userTemplates.value.length
@@ -92,8 +138,10 @@ onMounted(fetchTemplates)
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :rename-button="{ icon: 'mdi-pencil-outline', color: 'secondary' }"
             :delete-button="{ icon: 'mdi-delete-outline', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' }"
             @action="downloadTemplate(template._id, template.name)"
+            @rename="openRenameDialog(template._id, template.name)"
             @delete="deleteTemplate(template._id)"
           />
         </v-col>
@@ -110,12 +158,31 @@ onMounted(fetchTemplates)
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :rename-button="isAdmin ? { icon: 'mdi-pencil-outline', color: 'secondary' } : undefined"
             :delete-button="isAdmin ? { icon: 'mdi-delete-outline', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' } : undefined"
             @action="downloadTemplate(template._id, template.name)"
+            @rename="openRenameDialog(template._id, template.name)"
             @delete="deleteTemplate(template._id)"
           />
         </v-col>
       </template>
     </v-row>
+
+    <CabinetSettingsDialog
+      v-model="isRenameDialogOpen"
+      title="Переименовать шаблон"
+      submit-text="Сохранить"
+      :disabled="!renameMeta.valid"
+      @submit="renameTemplate"
+    >
+      <UiTextField
+        v-model="renameName.value.value"
+        :error-messages="renameName.errorMessage.value"
+        label="Новое название"
+        :placeholder="renamePlaceholder"
+        prepend-inner-icon="mdi-account-circle-outline"
+        autofocus
+      />
+    </CabinetSettingsDialog>
   </v-container>
 </template>
