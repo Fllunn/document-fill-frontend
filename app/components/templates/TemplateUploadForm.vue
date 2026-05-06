@@ -12,6 +12,7 @@ const MAX_SIZE = 512 * 1024
 const file = ref<File | null>(null)
 const isSystem = ref(false)
 const isDragging = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const fileSize = computed(() => {
   if (!file.value) return ''
@@ -49,6 +50,7 @@ async function submit() {
     file.value = null
     isSystem.value = false
     state.value = null
+    if (fileInput.value) fileInput.value.value = ''
     emit('uploaded')
 
     toast('Шаблон успешно загружен', { type: 'success' })
@@ -81,6 +83,7 @@ async function submit() {
       </v-card-text>
 
       <input
+        ref="fileInput"
         type="file"
         accept=".docx"
         class="d-none"

@@ -48,9 +48,16 @@ async function deleteTemplate(templateId: string): Promise<void> {
 }
 
 const userTemplateCols = computed(() => {
-  const n = userTemplates.value.length
-  if (n === 1) return { cols: 12 }
-  if (n === 2) return { cols: 12, sm: 6 }
+  const countTemplates = userTemplates.value.length
+  if (countTemplates === 1) return { cols: 12 }
+  if (countTemplates === 2) return { cols: 12, sm: 6 }
+  return { cols: 12, sm: 6, md: 4 }
+})
+
+const systemTemplateCols = computed(() => {
+  const countTemplates = systemTemplates.value.length
+  if (countTemplates === 1) return { cols: 12 }
+  if (countTemplates === 2) return { cols: 12, sm: 6 }
   return { cols: 12, sm: 6, md: 4 }
 })
 
@@ -81,9 +88,7 @@ onMounted(fetchTemplates)
           Нет загруженных шаблонов
         </v-col>
 
-        <v-col v-for="template in userTemplates" :key="template._id"
-        v-bind="userTemplateCols"
-        >
+        <v-col v-for="template in userTemplates" :key="template._id" v-bind="userTemplateCols">
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
@@ -94,14 +99,14 @@ onMounted(fetchTemplates)
         </v-col>
 
         <v-col cols="12">
-          <h2>Системные шаблоны</h2>
+          <h2>Предустановленные шаблоны</h2>
         </v-col>
 
         <v-col v-if="systemTemplates.length === 0" cols="12">
           Нет системных шаблонов
         </v-col>
 
-        <v-col v-for="template in systemTemplates" :key="template._id" cols="12" sm="6" md="4">
+        <v-col v-for="template in systemTemplates" :key="template._id" v-bind="systemTemplateCols">
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
