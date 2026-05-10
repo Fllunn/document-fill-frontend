@@ -10,6 +10,7 @@ import type { IChangePassword } from "~/types/auth/change-password.interface"
 
 export const useAuth = defineStore('auth', () => {
   const user = ref<IAuthUser | null>(null)
+  const authChecked = ref(false)
   const AuthAPI = useAuthApi()
   const router = useRouter()
 
@@ -38,18 +39,25 @@ export const useAuth = defineStore('auth', () => {
   }
 
   async function checkAuth(): Promise<boolean> {
+    if (authChecked.value) {
+      return !!user.value?._id
+    }
+
     try {
       if (user.value?._id) {
+        authChecked.value = true
         return true
       }
 
       const response = await AuthAPI.refresh()
 
       user.value = response
+      authChecked.value = true
 
       return true
     } catch {
       user.value = null
+      authChecked.value = true
 
       return false
     }
