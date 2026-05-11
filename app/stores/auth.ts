@@ -11,15 +11,24 @@ import type { IChangePassword } from "~/types/auth/change-password.interface"
 
 export const useAuth = defineStore('auth', () => {
   const user = ref<IAuthUser | null>(null)
-  const authChecked = ref(false)
+  const isAuthChecked = ref(false)
   const AuthAPI = useAuthApi()
   const router = useRouter()
+
+  let authPromise: Promise<boolean> | null = null
+  let refreshPromise: Promise<boolean> | null = null
+  let isAuthFailed = false
 
   async function register(data: IRegister): Promise<boolean> {
     try {
       const response = await AuthAPI.register(data)
       
       user.value = response
+
+      isAuthChecked.value = true
+      isAuthFailed = false
+      authPromise = null
+      refreshPromise = null
 
       return true
     } catch {
@@ -33,6 +42,11 @@ export const useAuth = defineStore('auth', () => {
 
       user.value = response
 
+      isAuthChecked.value = true
+      isAuthFailed = false
+      authPromise = null
+      refreshPromise = null
+
       return true
     } catch {
       return false
@@ -40,36 +54,64 @@ export const useAuth = defineStore('auth', () => {
   }
 
   async function checkAuth(): Promise<boolean> {
-    if (authChecked.value) {
+    if (isAuthFailed) return false
+
+    if (isAuthChecked.value) {
       return !!user.value?._id
     }
 
     if (user.value?._id) {
-      authChecked.value = true
+      isAuthChecked.value = true
       return true
     }
 
-    try {
-      user.value = await AuthAPI.me()
-      authChecked.value = true
-      return true
-    } catch (error) {
-      if ((error as FetchError).status === 401) {
-        authChecked.value = true
-        user.value = null
-        return false
-      }
+    if (authPromise) {
+      return authPromise
+    }
 
+    authPromise = (async () => {
       try {
-        user.value = await AuthAPI.refresh()
-        authChecked.value = true
+        user.value = await AuthAPI.me()
+        isAuthChecked.value = true
+        isAuthFailed = false
         return true
-      } catch {
-        authChecked.value = true
+      } catch (error) {
+        const status = (error as FetchError).status
+
+        if (status === 401) {
+          if (refreshPromise) {
+            return refreshPromise
+          }
+
+          refreshPromise = (async () => {
+            try {
+              user.value = await AuthAPI.refresh()
+              isAuthChecked.value = true
+              isAuthFailed = false
+              return true
+            } catch {
+              isAuthChecked.value = true
+              user.value = null
+              isAuthFailed = true
+              return false
+            } finally {
+              refreshPromise = null
+            }
+          })()
+
+          return refreshPromise
+        }
+
+        isAuthChecked.value = true
         user.value = null
+        isAuthFailed = true
         return false
+      } finally {
+        authPromise = null
       }
-    }
+    })()
+
+    return authPromise
   }
 
   async function logout(): Promise<void> {
@@ -77,6 +119,12 @@ export const useAuth = defineStore('auth', () => {
       await AuthAPI.logout()
     } finally {
       user.value = null
+
+      isAuthChecked.value = true
+      isAuthFailed = true
+
+      authPromise = null
+      refreshPromise = null
       
       await router.push('/')
     }
@@ -111,6 +159,10 @@ export const useAuth = defineStore('auth', () => {
       await AuthAPI.deleteUser(password)
 
       user.value = null
+      isAuthChecked.value = true
+      isAuthFailed = true
+      authPromise = null
+      refreshPromise = null
       
       await router.push('/')
 
