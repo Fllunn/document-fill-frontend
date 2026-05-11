@@ -10,7 +10,8 @@ type ApiOptions = Omit<FetchOptions, 'method'> & {
 }
 
 const REFRESH_URL = '/auth/refresh'
-const SKIP_REFRESH_URLS = ['/auth/register', '/auth/login', REFRESH_URL, '/auth/logout']
+const SKIP_REFRESH_URLS = ['/auth/register', '/auth/login', REFRESH_URL, '/auth/logout', '/auth/me']
+const SKIP_TOAST_URLS = ['/auth/me', '/auth/refresh']
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
@@ -63,7 +64,7 @@ export default defineNuxtPlugin(() => {
         }
       }
 
-      if (import.meta.client && !url.includes(REFRESH_URL) && fetchError.data?.message) {
+      if (import.meta.client && !url.includes(REFRESH_URL) && !SKIP_TOAST_URLS.some(route => url.includes(route)) && fetchError.data?.message) {
         toast(fetchError.data.message, { type: 'error' })
       }
 

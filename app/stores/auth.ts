@@ -1,6 +1,7 @@
 import { defineStore } from "pinia"
 import { useAuthApi } from "../api/AuthApi"
 import { ref } from "vue"
+import type { FetchError } from "ofetch"
 
 import type { IAuthUser } from "../types/auth/auth-user.interface"
 import type { IRegister } from "~/types/auth/register.interface"
@@ -43,23 +44,31 @@ export const useAuth = defineStore('auth', () => {
       return !!user.value?._id
     }
 
+    if (user.value?._id) {
+      authChecked.value = true
+      return true
+    }
+
     try {
-      if (user.value?._id) {
+      user.value = await AuthAPI.me()
+      authChecked.value = true
+      return true
+    } catch (error) {
+      if ((error as FetchError).status === 401) {
         authChecked.value = true
-        return true
+        user.value = null
+        return false
       }
 
-      const response = await AuthAPI.refresh()
-
-      user.value = response
-      authChecked.value = true
-
-      return true
-    } catch {
-      user.value = null
-      authChecked.value = true
-
-      return false
+      try {
+        user.value = await AuthAPI.refresh()
+        authChecked.value = true
+        return true
+      } catch {
+        authChecked.value = true
+        user.value = null
+        return false
+      }
     }
   }
 
