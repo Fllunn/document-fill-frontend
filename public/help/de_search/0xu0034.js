@@ -1,0 +1,10 @@
+DR_EXPLAIN = DR_EXPLAIN || {};
+DR_EXPLAIN.searchIndex = DR_EXPLAIN.searchIndex || {};
+DR_EXPLAIN.searchIndex["\u0034"] = [
+	{ "s": "4", "p": [15, 16, 14, 13, 12, 11, 8] },
+	{ "s": "4.1", "p": [12] },
+	{ "s": "4.2", "p": [13] },
+	{ "s": "4.3", "p": [14] },
+	{ "s": "4.4", "p": [15] },
+	{ "s": "4.5", "p": [16] }
+];
