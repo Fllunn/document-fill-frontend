@@ -16,6 +16,10 @@ export const useAuthApi = () => {
       return $apiFetch<IAuthUser>('/auth/login', { method: 'POST', body: user })
     },
 
+    me() {
+      return $apiFetch<IAuthUser>('/auth/me', { method: 'GET' })
+    },
+
     refresh() {
       return $apiFetch<IAuthUser>('/auth/refresh', { method: 'GET' })
     },
