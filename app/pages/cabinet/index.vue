@@ -138,9 +138,11 @@ onMounted(fetchTemplates)
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :fill-button="{ icon: 'mdi-form-select', color: 'success' }"
             :rename-button="{ icon: 'mdi-pencil-outline', color: 'secondary' }"
             :delete-button="{ icon: 'mdi-delete-outline', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' }"
             @action="downloadTemplate(template._id, template.name)"
+            @fill="navigateTo(`/cabinet/fill/${template._id}`)"
             @rename="openRenameDialog(template._id, template.name)"
             @delete="deleteTemplate(template._id)"
           />
@@ -151,16 +153,18 @@ onMounted(fetchTemplates)
         </v-col>
 
         <v-col v-if="systemTemplates.length === 0" cols="12">
-          Нет системных шаблонов
+          Нет предустановленных шаблонов
         </v-col>
 
         <v-col v-for="template in systemTemplates" :key="template._id" v-bind="systemTemplateCols">
           <TemplatesFileCard
             :title="template.name"
             :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :fill-button="{ icon: 'mdi-form-select', color: 'success' }"
             :rename-button="isAdmin ? { icon: 'mdi-pencil-outline', color: 'secondary' } : undefined"
             :delete-button="isAdmin ? { icon: 'mdi-delete-outline', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' } : undefined"
             @action="downloadTemplate(template._id, template.name)"
+            @fill="navigateTo(`/cabinet/fill/${template._id}`)"
             @rename="openRenameDialog(template._id, template.name)"
             @delete="deleteTemplate(template._id)"
           />
