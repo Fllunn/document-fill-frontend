@@ -137,10 +137,10 @@ onMounted(fetchTemplates)
         <v-col v-for="template in userTemplates" :key="template._id" v-bind="userTemplateCols">
           <TemplatesFileCard
             :title="template.name"
-            :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
-            :fill-button="{ icon: 'mdi-form-select', color: 'success' }"
-            :rename-button="{ icon: 'mdi-pencil-outline', color: 'secondary' }"
-            :delete-button="{ icon: 'mdi-delete-outline', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' }"
+            :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :fill-button="{ icon: 'mdi-form-select', tooltip: 'Заполнить', color: 'success' }"
+            :rename-button="{ icon: 'mdi-pencil-outline', tooltip: 'Редактировать', color: 'secondary' }"
+            :delete-button="{ icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' }"
             @action="downloadTemplate(template._id, template.name)"
             @fill="navigateTo(`/cabinet/fill/${template._id}`)"
             @rename="openRenameDialog(template._id, template.name)"
@@ -159,10 +159,10 @@ onMounted(fetchTemplates)
         <v-col v-for="template in systemTemplates" :key="template._id" v-bind="systemTemplateCols">
           <TemplatesFileCard
             :title="template.name"
-            :action-button="{ icon: 'mdi-download-outline', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
-            :fill-button="{ icon: 'mdi-form-select', color: 'success' }"
-            :rename-button="isAdmin ? { icon: 'mdi-pencil-outline', color: 'secondary' } : undefined"
-            :delete-button="isAdmin ? { icon: 'mdi-delete-outline', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' } : undefined"
+            :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :fill-button="{ icon: 'mdi-form-select', tooltip: 'Заполнить', color: 'success' }"
+            :rename-button="isAdmin ? { icon: 'mdi-pencil-outline', tooltip: 'Редактировать', color: 'secondary' } : undefined"
+            :delete-button="isAdmin ? { icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' } : undefined"
             @action="downloadTemplate(template._id, template.name)"
             @fill="navigateTo(`/cabinet/fill/${template._id}`)"
             @rename="openRenameDialog(template._id, template.name)"

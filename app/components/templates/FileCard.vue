@@ -2,6 +2,7 @@
 export type ButtonConfig = {
   icon: string
   color?: string
+  tooltip?: string
   confirmText?: string
   confirmLabel?: string
 }
@@ -48,7 +49,11 @@ function handleEmit(event: 'action' | 'fill' | 'rename' | 'delete') {
         <template v-for="btn in buttons" :key="btn.event">
           <v-menu v-if="btn.config.confirmText" v-model="menuOpen[btn.event]" :close-on-content-click="false">
             <template #activator="{ props: menuProps }">
-              <v-btn v-bind="menuProps" :icon="btn.config.icon" :color="btn.config.color" variant="text" size="small" />
+              <v-tooltip :text="btn.config.tooltip" :disabled="!btn.config.tooltip" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <v-btn v-bind="{ ...menuProps, ...tooltipProps }" :icon="btn.config.icon" :color="btn.config.color" variant="text" size="small" />
+                </template>
+              </v-tooltip>
             </template>
             <v-card>
               <v-card-text class="pb-0">{{ btn.config.confirmText }}</v-card-text>
@@ -62,7 +67,11 @@ function handleEmit(event: 'action' | 'fill' | 'rename' | 'delete') {
             </v-card>
           </v-menu>
 
-          <v-btn v-else :icon="btn.config.icon" :color="btn.config.color" variant="text" size="small" @click="handleEmit(btn.event)" />
+          <v-tooltip v-else :text="btn.config.tooltip" :disabled="!btn.config.tooltip" location="top">
+            <template #activator="{ props: tooltipProps }">
+              <v-btn v-bind="tooltipProps" :icon="btn.config.icon" :color="btn.config.color" variant="text" size="small" @click="handleEmit(btn.event)" />
+            </template>
+          </v-tooltip>
         </template>
       </template>
     </v-list-item>
