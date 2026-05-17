@@ -13,13 +13,13 @@ export const useDocumentApi = () => {
     extract(file: File) {
       const form = new FormData()
       form.append('file', file)
-      return $apiFetch<{ values: Record<string, string>; name: string }>('/documents/extract', {
+      return $apiFetch<{ values: Record<string, any>; name: string }>('/documents/extract', {
         method: 'POST',
         body: form,
       })
     },
 
-    update(file: File, values: Record<string, string>, name?: string) {
+    update(file: File, values: Record<string, any>, name?: string) {
       const form = new FormData()
       form.append('file', file)
       form.append('values', JSON.stringify(values))

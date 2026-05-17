@@ -1,19 +1,29 @@
 <script setup lang="ts">
 import { useVariablesTemplate } from '~/composables/Templates/useVariablesTemplate'
 import { useDocumentCreate } from '~/composables/Documents/useDocumentCreate'
+import { useDocumentUpdate } from '~/composables/Documents/useDocumentUpdate'
+import type { VariablesState } from '~/types/state/template.interface'
 
 type Props = {
-  templateId: string
+  templateId?: string
+  file?: File
+  externalData?: VariablesState['data']
+  externalValues?: Record<string, string>
+  externalLoopValues?: Record<string, Record<string, string>[]>
+  externalDocName?: string
 }
 
 const props = defineProps<Props>()
 
 const { state, getVariables } = useVariablesTemplate()
-const { loading: generating, create } = useDocumentCreate()
+const { loading: creating, create } = useDocumentCreate()
+const { loading: updating, update } = useDocumentUpdate()
+
+const generating = computed(() => creating.value || updating.value)
 
 const values = ref<Record<string, string>>({})
 const loopValues = ref<Record<string, Record<string, string>[]>>({})
-const docName = ref('')
+const docName = ref(props.externalDocName ?? '')
 
 const simpleCategories = computed(() =>
   Object.fromEntries(
@@ -28,17 +38,45 @@ const loopCategories = computed(() =>
 )
 
 onMounted(async () => {
-  await getVariables(props.templateId)
+  if (props.externalData) {
+    state.value.data = props.externalData
+    values.value = props.externalValues ? { ...props.externalValues } : {}
+    loopValues.value = props.externalLoopValues ? { ...props.externalLoopValues } : {}
 
-  for (const [category, vars] of Object.entries(state.value.data)) {
-    if (category.endsWith('[]')) {
-      loopValues.value[category] = [Object.fromEntries(vars.map(v => [v, '']))]
-    } else {
-      for (const variable of vars) {
-        values.value[`${category}.${variable}`] = ''
+    if (!props.externalValues) {
+      for (const [category, vars] of Object.entries(state.value.data)) {
+        if (!category.endsWith('[]')) {
+          for (const variable of vars) {
+            values.value[`${category}.${variable}`] = ''
+          }
+        }
+      }
+    }
+
+    if (!props.externalLoopValues) {
+      for (const [category, vars] of Object.entries(state.value.data)) {
+        if (category.endsWith('[]')) {
+          loopValues.value[category] = [Object.fromEntries(vars.map(v => [v, '']))]
+        }
+      }
+    }
+  } else {
+    await getVariables(props.templateId!)
+
+    for (const [category, vars] of Object.entries(state.value.data)) {
+      if (category.endsWith('[]')) {
+        loopValues.value[category] = [Object.fromEntries(vars.map(v => [v, '']))]
+      } else {
+        for (const variable of vars) {
+          values.value[`${category}.${variable}`] = ''
+        }
       }
     }
   }
+})
+
+watch(() => props.externalDocName, (val) => {
+  if (val !== undefined) docName.value = val
 })
 
 function addRow(category: string) {
@@ -65,7 +103,11 @@ function buildValues(): Record<string, any> {
 }
 
 function generate() {
-  create(props.templateId, buildValues(), docName.value || undefined)
+  if (props.file) {
+    update(props.file, buildValues(), docName.value || undefined)
+  } else {
+    create(props.templateId!, buildValues(), docName.value || undefined)
+  }
 }
 </script>
 
@@ -85,6 +127,7 @@ function generate() {
           <UiTextField
             :model-value="values[`${category}.${variable}`] ?? ''"
             :label="variable"
+            :autofocus="false"
             @update:model-value="values[`${category}.${variable}`] = $event"
           >
             <template #append-inner>
@@ -137,6 +180,7 @@ function generate() {
                   <UiTextField
                     :model-value="row[variable] ?? ''"
                     :label="variable"
+                    :autofocus="false"
                     @update:model-value="row[variable] = $event"
                   >
                     <template #append-inner>
@@ -166,7 +210,7 @@ function generate() {
       <v-col cols="12" class="pt-4 d-flex justify-center">
         <v-row justify="center" align="center" style="max-width: 700px; width: 100%">
           <v-col cols="12" sm="7">
-            <UiTextField v-model="docName" label="Название документа" hide-details />
+            <UiTextField v-model="docName" label="Название документа" hide-details :autofocus="false" />
           </v-col>
           <v-col cols="12" sm="5" class="d-flex align-center">
             <v-btn color="primary" :loading="generating" block @click="generate">

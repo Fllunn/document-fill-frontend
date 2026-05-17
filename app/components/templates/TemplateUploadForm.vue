@@ -14,17 +14,7 @@ const isSystem = ref(false)
 const isDragging = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const fileSize = computed(() => {
-  if (!file.value) return ''
-
-  const kb = file.value.size / 1024
-
-  if (kb < 1024) {
-    return `${kb.toFixed(1)} КБ`
-  }
-
-  return `${(kb / 1024).toFixed(1)} МБ`
-})
+const { fileSize } = useFileSize(file)
 
 function setFile(picked: File | undefined) {
   if (!picked?.name.endsWith('.docx'))
