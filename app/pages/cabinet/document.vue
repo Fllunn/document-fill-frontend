@@ -68,11 +68,13 @@ function reset() {
               <v-icon size="48">mdi-file-document-outline</v-icon>
 
               <v-card-title class="text-wrap">
-                Нажмите сюда или перетащите файл, чтобы загрузить документ
+                Нажмите сюда или перетащите файл, чтобы загрузить документ.
               </v-card-title>
 
               <v-card-subtitle class="text-wrap">
                 Поддерживаемый формат: docx
+                <br>
+                Вы можете загрузить только тот документ, который вы ранее создали с помощью сервиса
               </v-card-subtitle>
             </v-card-text>
 

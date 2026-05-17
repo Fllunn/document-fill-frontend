@@ -4,6 +4,17 @@ const auth = useAuth()
 const isLogoutDialogOpen = ref(false)
 const loading = ref(false)
 
+interface NavLink {
+  title: string
+  to: string
+  icon: string
+}
+
+const navLinks: NavLink[] = [
+  { title: 'Шаблоны', to: '/cabinet', icon: 'mdi-file-document-outline' },
+  { title: 'Мои документы', to: '/cabinet/document', icon: 'mdi-folder-outline' },
+]
+
 const userFirstLetter = computed(() => {
   if (!auth.user?.name) {
     return ''
@@ -50,6 +61,18 @@ onUnmounted(() => {
 
         <v-spacer></v-spacer>
 
+        <div class="d-none d-sm-flex align-center">
+          <NuxtLink
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
+            class="text-decoration-none text-high-emphasis mx-3"
+          >
+            {{ link.title }}
+          </NuxtLink>
+        </div>
+
+        <v-spacer></v-spacer>
 
         <div class="d-none d-sm-flex align-center">
           <template v-if="userFirstLetter">
@@ -67,10 +90,6 @@ onUnmounted(() => {
               </template>
 
               <v-list rounded="xl">
-                <v-list-item to="/cabinet" prepend-icon="mdi-home-outline" rounded="xl">
-                  <v-list-item-title>Личный кабинет</v-list-item-title>
-                </v-list-item>
-
                 <v-list-item to="/cabinet/settings" prepend-icon="mdi-cog-outline" rounded="xl">
                   <v-list-item-title>Настройки</v-list-item-title>
                 </v-list-item>
@@ -111,11 +130,19 @@ onUnmounted(() => {
             </template>
 
             <v-list rounded="xl">
-              <template v-if="userFirstLetter">
-                <v-list-item to="/cabinet" prepend-icon="mdi-home-outline" rounded="xl">
-                  <v-list-item-title>Личный кабинет</v-list-item-title>
-                </v-list-item>
+              <v-list-item
+                v-for="link in navLinks"
+                :key="link.to"
+                :to="link.to"
+                :prepend-icon="link.icon"
+                rounded="xl"
+              >
+                <v-list-item-title>{{ link.title }}</v-list-item-title>
+              </v-list-item>
 
+              <v-divider class="my-1"></v-divider>
+
+              <template v-if="userFirstLetter">
                 <v-list-item to="/cabinet/settings" prepend-icon="mdi-cog-outline" rounded="xl">
                   <v-list-item-title>Настройки</v-list-item-title>
                 </v-list-item>
