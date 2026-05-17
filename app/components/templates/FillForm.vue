@@ -35,7 +35,18 @@ onMounted(async () => {
         </v-col>
 
         <v-col v-for="variable in vars" :key="variable" cols="12" sm="6" md="4" class="pt-0 pb-1">
-          <UiTextField :model-value="values[`${category}.${variable}`] ?? ''" :label="variable" @update:model-value="values[`${category}.${variable}`] = $event" />
+          <UiTextField
+            :model-value="values[`${category}.${variable}`] ?? ''"
+            :label="variable"
+            @update:model-value="values[`${category}.${variable}`] = $event"
+          >
+            <template #append-inner>
+              <TemplatesFieldActionMenu
+                :model-value="values[`${category}.${variable}`] ?? ''"
+                @update:model-value="values[`${category}.${variable}`] = $event"
+              />
+            </template>
+          </UiTextField>
         </v-col>
       </template>
     </template>
