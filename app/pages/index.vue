@@ -38,7 +38,7 @@
     <section class="features-section">
       <v-container>
 
-        <v-row >
+        <v-row>
           <v-col cols="12" md="9">
 
             <h2 class="section-title">
@@ -63,13 +63,16 @@
             </div>
 
             </div>
+            </v-col>
+        </v-row>
 
+        <v-row justify="center">
             <h2 class="section-title mt-10">
               Какие возможности мы предоставляем?
             </h2>
-
-        <v-row  class="mt-8" dense>
-  
+        </v-row>
+            
+        <v-row >
           <v-col cols="12" sm="6" md="3">
             <v-card class="feature-card pa-6 text-center" variant="outlined">
               <v-icon size="48">mdi-file-document-outline</v-icon>
@@ -108,8 +111,7 @@
 
         </v-row>
 
-          </v-col>
-        </v-row>
+          
       </v-container>
     </section>
   </v-container>
