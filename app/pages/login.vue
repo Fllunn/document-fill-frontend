@@ -42,11 +42,7 @@ const login = handleSubmit(async (values) => {
     })
 
     if (isLoggedIn) {
-      if (auth.user?.roles?.includes('admin')) {
-        await router.push('/admin')
-      } else {
-        await router.push('/cabinet')
-      }
+      await router.push('/cabinet')
     }
   } finally {
     loading.value = false
