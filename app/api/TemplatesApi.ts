@@ -30,7 +30,7 @@ export default {
     return $apiFetch<boolean>(`/templates/${templateId}`, { method: 'DELETE' })
   },
 
-  update(templateId: string, template?: Partial<ITemplateToEdit>, file?: File): Promise<ITemplateToEdit> {
+  update(templateId: string, template?: Pick<ITemplateToEdit, 'name'>, file?: File): Promise<ITemplateToEdit> {
     const { $apiFetch } = useNuxtApp()
 
     const formData = new FormData()
@@ -54,5 +54,11 @@ export default {
     const { $apiFetch } = useNuxtApp()
 
     return $apiFetch<Record<string, string[]>>(`/templates/${templateId}/variables`, { method: 'GET' })
+  },
+
+  download(templateId: string): Promise<Blob> {
+    const { $apiFetch } = useNuxtApp()
+
+    return $apiFetch<Blob>(`/templates/${templateId}/download`, { method: 'GET', responseType: 'blob' })
   },
 }

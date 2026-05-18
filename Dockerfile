@@ -1,10 +1,14 @@
 FROM node:22-alpine AS base
 
+RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+ENV CI=true
 
-RUN rm -f package-lock.json && npm install --legacy-peer-deps
+COPY package.json ./
+
+RUN npm install --legacy-peer-deps
 
 FROM base AS build
 
@@ -13,6 +17,8 @@ COPY . .
 RUN npm run build
 
 FROM node:22-alpine AS production
+
+RUN apk add --no-cache libc6-compat
 
 ENV NODE_ENV=production
 ENV PORT=3000

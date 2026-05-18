@@ -32,5 +32,9 @@ const emit = defineEmits<{
     class="mb-2"
     @update:model-value="emit('update:modelValue', $event)"
     autofocus
-  />
+  >
+    <template v-if="$slots['append-inner']" #append-inner>
+      <slot name="append-inner" />
+    </template>
+  </v-text-field>
 </template>

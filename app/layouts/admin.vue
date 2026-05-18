@@ -1,48 +1,39 @@
 <script setup lang="ts">
-const route = useRoute();
-const router = useRouter();
-const userStore = useAuth();
+const route = useRoute()
+const auth = useAuth()
+const isLogoutDialogOpen = ref(false)
+const loading = ref(false)
 
-let drawer = ref(false);
-let dialog = ref(false);
+const breadcrumbTranslations: Record<string, string> = {
+  admin: 'Админка',
+}
 
-const breadcrumbTranslations: { [key: string]: string } = {
-  "admin": "Админка",
-};
-
-const navigationItems: any[] = [
-  { title: 'Панель управления', path: '/admin', icon: 'mdi-account-tie' },
-];
-
-const getTitle = (segment: string): string => {
-  return breadcrumbTranslations[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
-};
+const userFirstLetter = computed(() => {
+  if (!auth.user?.name) return ''
+  return auth.user.name.charAt(0).toUpperCase()
+})
 
 const breadcrumbs = computed(() => {
-  const pathSegments = route.path.split('/').filter(segment => segment);
+  const segments = route.path.split('/').filter(Boolean)
 
-  const items = pathSegments.map((segment, index) => {
-    const to = '/' + pathSegments.slice(0, index + 1).join('/');
-    return {
-      title: getTitle(segment),
-      to: to,
-      disabled: index === pathSegments.length - 1,
-    };
-  });
+  const items = segments.map((segment, index) => ({
+    title: breadcrumbTranslations[segment] ?? segment.charAt(0).toUpperCase() + segment.slice(1),
+    to: '/' + segments.slice(0, index + 1).join('/'),
+    disabled: index === segments.length - 1,
+  }))
 
-  return [
-    {
-      title: 'Главная',
-      to: '/',
-      disabled: route.path === '/',
-    },
-    ...items,
-  ];
-});
+  return [{ title: 'Главная', to: '/', disabled: route.path === '/' }, ...items]
+})
 
-async function logOut() {
-  dialog.value = false;
-  await userStore.logout();
+async function logout(): Promise<void> {
+  loading.value = true
+
+  try {
+    await auth.logout()
+  } finally {
+    loading.value = false
+    isLogoutDialogOpen.value = false
+  }
 }
 </script>
 
@@ -56,74 +47,113 @@ async function logOut() {
 
         <v-spacer></v-spacer>
 
-        <div class="hidden-sm-and-down d-flex align-center">
-          <v-btn v-for="item in navigationItems" :key="item.path" :to="item.path" variant="text" class="mx-1"
-            :prepend-icon="item.icon">
-            {{ item.title }}
-          </v-btn>
+        <v-spacer></v-spacer>
 
+        <div class="d-none d-sm-flex align-center">
+          <template v-if="userFirstLetter">
+            <v-menu location="bottom end">
+              <template #activator="{ props }">
+                <v-btn v-bind="props" variant="text" class="pl-0 mr-4">
+                  <template #prepend>
+                    <v-avatar size="36" color="grey-lighten-3" class="border">
+                      {{ userFirstLetter }}
+                    </v-avatar>
+                  </template>
+
+                  <v-icon icon="mdi-chevron-down" />
+                </v-btn>
+              </template>
+
+              <v-list rounded="xl">
+                <v-list-item to="/cabinet/settings" prepend-icon="mdi-cog-outline" rounded="xl">
+                  <v-list-item-title>Настройки</v-list-item-title>
+                </v-list-item>
+
+                <v-divider></v-divider>
+
+                <v-list-item
+                  prepend-icon="mdi-logout"
+                  base-color="error"
+                  @click="isLogoutDialogOpen = true"
+                  rounded="xl"
+                >
+                  <v-list-item-title>Выйти</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </template>
+
+          <template v-else>
+            <v-btn to="/login" variant="outlined" class="mr-2" :active="false">
+              Войти
+            </v-btn>
+
+            <v-btn to="/register" variant="flat" color="primary" class="mr-4">
+              Регистрация
+            </v-btn>
+          </template>
+
+          <v-btn to="/admin" variant="flat" color="primary" prepend-icon="mdi-account-tie">
+            Панель управления
+          </v-btn>
+        </div>
+
+        <div class="d-flex d-sm-none align-center">
           <v-menu location="bottom end">
-            <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" class="ml-2">
-                <v-avatar size="32" class="mr-2 border">
-                  <span v-if="userStore.user?.name">{{ userStore.user.name[0] }}</span>
-                </v-avatar>
-                {{ userStore.user?.name }}
-                <v-icon icon="mdi-chevron-down"></v-icon>
-              </v-btn>
+            <template #activator="{ props }">
+              <v-btn v-bind="props" icon="mdi-menu" variant="text"></v-btn>
             </template>
-            <v-list>
-              <v-list-item to="/cabinet" prepend-icon="mdi-home-outline">
-                <v-list-item-title>Личный кабинет</v-list-item-title>
-              </v-list-item>
-              <v-divider></v-divider>
-              <v-list-item @click="dialog = true" prepend-icon="mdi-logout" base-color="error">
-                <v-list-item-title>Выйти</v-list-item-title>
+
+            <v-list rounded="xl">
+              <v-divider class="my-1"></v-divider>
+
+              <template v-if="userFirstLetter">
+                <v-list-item to="/cabinet/settings" prepend-icon="mdi-cog-outline" rounded="xl">
+                  <v-list-item-title>Настройки</v-list-item-title>
+                </v-list-item>
+
+                <v-divider></v-divider>
+
+                <v-list-item
+                  prepend-icon="mdi-logout"
+                  base-color="error"
+                  @click="isLogoutDialogOpen = true"
+                  rounded="xl"
+                >
+                  <v-list-item-title>Выйти</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <template v-else>
+                <v-list-item to="/login" prepend-icon="mdi-login" rounded="xl">
+                  <v-list-item-title>Войти</v-list-item-title>
+                </v-list-item>
+
+                <v-list-item to="/register" prepend-icon="mdi-account-plus" rounded="xl">
+                  <v-list-item-title>Регистрация</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-divider class="my-1"></v-divider>
+
+              <v-list-item to="/admin" prepend-icon="mdi-account-tie" rounded="xl">
+                <v-list-item-title>Панель управления</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
         </div>
-
-        <v-app-bar-nav-icon class="hidden-md-and-up" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       </v-container>
     </v-app-bar>
-
-    <v-navigation-drawer v-model="drawer" location="right" temporary>
-      <v-list>
-        <v-list-item :title="userStore.user?.name" :subtitle="userStore.user?.email">
-          <template v-slot:prepend>
-            <v-avatar class="border">
-              <span v-if="userStore.user?.name">{{ userStore.user.name[0] }}</span>
-            </v-avatar>
-          </template>
-        </v-list-item>
-      </v-list>
-
-      <v-divider></v-divider>
-
-      <v-list nav>
-        <v-list-item v-for="item in navigationItems" :key="item.path" :to="item.path" :prepend-icon="item.icon"
-          :title="item.title"></v-list-item>
-      </v-list>
-
-      <template v-slot:append>
-        <div class="pa-2">
-          <v-btn block color="red" variant="tonal" prepend-icon="mdi-logout" @click="dialog = true">
-            Выйти
-          </v-btn>
-        </div>
-      </template>
-    </v-navigation-drawer>
 
     <v-main>
       <v-container v-if="route.path.startsWith('/admin')">
         <v-row>
           <v-col cols="12">
             <v-breadcrumbs :items="breadcrumbs" class="text-h4 font-weight-bold pa-0">
-              <template v-slot:divider>
+              <template #divider>
                 <v-icon icon="mdi-chevron-right"></v-icon>
               </template>
-              <template v-slot:item="{ item }">
+              <template #item="{ item }">
                 <v-breadcrumbs-item :to="item.to" :disabled="item.disabled" class="text-decoration-none">
                   {{ item.title }}
                 </v-breadcrumbs-item>
@@ -136,15 +166,14 @@ async function logOut() {
       <slot />
     </v-main>
 
-    <v-dialog v-model="dialog" max-width="400">
-      <v-card title="Выйти из аккаунта?" text="Вы уверены, что хотите завершить текущую сессию?">
-        <template v-slot:actions>
-          <v-spacer></v-spacer>
-          <v-btn text="Отмена" @click="dialog = false"></v-btn>
-          <v-btn text="Да, выйти" color="primary" @click="logOut"></v-btn>
-        </template>
-      </v-card>
-    </v-dialog>
+    <CabinetSettingsDialog
+      v-model="isLogoutDialogOpen"
+      title="Выход из аккаунта"
+      description="Вы уверены, что хотите выйти из аккаунта?"
+      submit-text="Выйти"
+      :loading="loading"
+      @submit="logout"
+    />
 
     <Footer />
   </v-app>

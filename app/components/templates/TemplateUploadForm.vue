@@ -1,14 +1,35 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { toast } from 'vue3-toastify'
 import { useUploadTemplate } from '~/composables/Templates/useUploadTemplate'
 
 const { state, createFromFile } = useUploadTemplate()
+const { isAdmin } = useRole()
+
+const emit = defineEmits<{ uploaded: [] }>()
+
+const MAX_SIZE = 512 * 1024
 
 const file = ref<File | null>(null)
 const isSystem = ref(false)
+const isDragging = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
-function onFileChange(value: File | File[] | null) {
-  file.value = Array.isArray(value) ? value[0] ?? null : value
+const { fileSize } = useFileSize(file)
+
+function setFile(picked: File | undefined) {
+  if (!picked?.name.endsWith('.docx'))
+    return toast('Разрешены только файлы .docx', { type: 'error' })
+
+  if (!isAdmin.value && picked.size > MAX_SIZE)
+    return toast('Размер файла не должен превышать 512 КБ', { type: 'error' })
+
+  file.value = picked
+}
+
+function onDrop(e: DragEvent) {
+  isDragging.value = false
+  
+  setFile(e.dataTransfer?.files[0])
 }
 
 async function submit() {
@@ -16,24 +37,80 @@ async function submit() {
 
   const success = await createFromFile(file.value, isSystem.value)
   if (success) {
-
-    // Сброс формы
     file.value = null
     isSystem.value = false
     state.value = null
+    if (fileInput.value) fileInput.value.value = ''
+    emit('uploaded')
+
+    toast('Шаблон успешно загружен', { type: 'success' })
   }
 }
 </script>
 
 <template>
-  <v-file-input
-    label="Загрузить шаблон"
-    accept=".docx"
-    @update:model-value="onFileChange"
-    v-model="file"
-  />
+  <v-card variant="outlined" rounded="lg">
+    <v-card
+      flat
+      tag="label"
+      :color="isDragging ? 'primary' : undefined"
+      :variant="isDragging ? 'tonal' : 'flat'"
+      @click="() => {}"
+      @dragover.prevent="isDragging = true"
+      @dragleave="isDragging = false"
+      @drop.prevent="onDrop($event as DragEvent)"
+    >
+      <v-card-text class="d-flex flex-column align-center text-center pa-8">
+        <v-icon size="48">mdi-cloud-upload-outline</v-icon>
 
-  <v-checkbox v-model="isSystem" label="Системный шаблон" />
+        <v-card-title class="text-wrap">
+          Нажмите сюда или перетащите файл, чтобы загрузить шаблон
+        </v-card-title>
 
-  <v-btn color="primary" @click="submit">Создать</v-btn>
+        <v-card-subtitle class="text-wrap">
+          Поддерживаемый формат: docx
+        </v-card-subtitle>
+      </v-card-text>
+
+      <input
+        ref="fileInput"
+        type="file"
+        accept=".docx"
+        class="d-none"
+        @change="setFile(($event.target as HTMLInputElement).files?.[0])"
+      />
+    </v-card>
+
+    <v-divider />
+
+    <v-card-text v-if="isAdmin">
+      <v-checkbox
+        v-model="isSystem"
+        label="Системный шаблон"
+        hide-details
+      />
+    </v-card-text>
+
+    <template v-if="file">
+      <v-divider />
+
+      <v-card-actions class="pa-4">
+        <TemplatesFileCard
+          :title="file.name"
+          :subtitle="fileSize"
+          action-icon="mdi-close"
+          class="flex-grow-1"
+          @action="file = null"
+        />
+
+        <v-btn
+          color="primary"
+          variant="outlined"
+          @click="submit"
+        >
+          Загрузить
+        </v-btn>
+      </v-card-actions>
+    </template>
+  </v-card>
 </template>
