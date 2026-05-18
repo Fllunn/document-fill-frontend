@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { APP_NAME } from '~/constants/app.constants'
+
 const currentYear = new Date().getFullYear()
 
 const footerLinks = [
@@ -13,7 +15,7 @@ const footerLinks = [
       <v-row align="center" class="py-4">
         <v-col cols="12" md="4" class="text-center text-md-left">
           <NuxtLink to="/" class="text-h5 font-weight-bold text-decoration-none text-grey-darken-1">
-            DocumentFill
+            {{ APP_NAME }}
           </NuxtLink>
         </v-col>
 
@@ -28,7 +30,7 @@ const footerLinks = [
 
       <v-row align="center" class="py-2">
         <v-col cols="12" md="8" class="text-center text-md-left text-body-2 text-medium-emphasis">
-          © {{ currentYear }} DocumentFill — Все права защищены.
+          © {{ currentYear }} {{ APP_NAME }} — Все права защищены.
         </v-col>
       </v-row>
     </v-container>

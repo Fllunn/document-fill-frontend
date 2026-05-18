@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { APP_NAME } from '~/constants/app.constants'
 
 const auth = useAuth()
 const isLogoutDialogOpen = ref(false)
@@ -56,7 +57,7 @@ onUnmounted(() => {
     <v-app-bar flat border>
       <v-container class="d-flex align-center">
         <NuxtLink to="/" class="text-decoration-none text-high-emphasis">
-          <div class="font-weight-bold text-h6">DocumentFill</div>
+          <div class="font-weight-bold text-h6">{{ APP_NAME }}</div>
         </NuxtLink>
 
         <v-spacer></v-spacer>
