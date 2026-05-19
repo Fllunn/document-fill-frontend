@@ -2,6 +2,7 @@
 import { useVariablesTemplate } from '~/composables/Templates/useVariablesTemplate'
 import { useDocumentCreate } from '~/composables/Documents/useDocumentCreate'
 import { useDocumentUpdate } from '~/composables/Documents/useDocumentUpdate'
+import { useFieldNavigation } from '~/composables/Templates/useFieldNavigation'
 import type { VariablesState } from '~/types/state/template.interface'
 
 type Props = {
@@ -109,6 +110,19 @@ function generate() {
     create(props.templateId!, buildValues(), docName.value || undefined)
   }
 }
+
+const {
+  simpleFieldRefs,
+  loopFieldRefs,
+  onSimpleEnter,
+  onLoopEnter,
+  onArrowLeft,
+  onArrowRight,
+  onSimpleArrowUp,
+  onSimpleArrowDown,
+  onLoopArrowUp,
+  onLoopArrowDown,
+} = useFieldNavigation(simpleCategories, loopCategories, loopValues, addRow)
 </script>
 
 <template>
@@ -125,10 +139,16 @@ function generate() {
 
         <v-col v-for="variable in vars" :key="variable" cols="12" sm="6" md="4" class="pt-0 pb-1">
           <UiTextField
+            :ref="(el) => { const k = `${String(category)}.${variable}`; if (el) simpleFieldRefs.set(k, el as any); else simpleFieldRefs.delete(k) }"
             :model-value="values[`${category}.${variable}`] ?? ''"
             :label="variable"
             :autofocus="false"
             @update:model-value="values[`${category}.${variable}`] = $event"
+            @enter="onSimpleEnter(String(category), variable)"
+            @arrow-left="onArrowLeft(`${String(category)}.${variable}`)"
+            @arrow-right="onArrowRight(`${String(category)}.${variable}`)"
+            @arrow-up="onSimpleArrowUp(String(category), variable)"
+            @arrow-down="onSimpleArrowDown(String(category), variable)"
           >
             <template #append-inner>
               <TemplatesFieldActionMenu
@@ -178,10 +198,16 @@ function generate() {
                   class="pb-1"
                 >
                   <UiTextField
+                    :ref="(el) => { const k = `${String(category)}.${rowIndex}.${variable}`; if (el) loopFieldRefs.set(k, el as any); else loopFieldRefs.delete(k) }"
                     :model-value="row[variable] ?? ''"
                     :label="variable"
                     :autofocus="false"
                     @update:model-value="row[variable] = $event"
+                    @enter="onLoopEnter(String(category), rowIndex, variable)"
+                    @arrow-left="onArrowLeft(`${String(category)}.${rowIndex}.${variable}`)"
+                    @arrow-right="onArrowRight(`${String(category)}.${rowIndex}.${variable}`)"
+                    @arrow-up="onLoopArrowUp(String(category), rowIndex, variable)"
+                    @arrow-down="onLoopArrowDown(String(category), rowIndex, variable)"
                   >
                     <template #append-inner>
                       <TemplatesFieldActionMenu
