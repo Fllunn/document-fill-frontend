@@ -7,7 +7,7 @@ definePageMeta({ middleware: 'auth' })
 const { loading: extracting, extract, variables, initialValues, initialLoopValues, docName } = useDocumentExtract()
 const { isAdmin } = useRole()
 
-const MAX_SIZE = 512 * 1024
+const MAX_SIZE = 1 * 1024 * 1024
 
 const file = ref<File | null>(null)
 const extracted = ref(false)
@@ -21,7 +21,7 @@ function setFile(picked: File | undefined) {
     return toast('Разрешены только файлы .docx', { type: 'error' })
 
   if (!isAdmin.value && picked.size > MAX_SIZE)
-    return toast('Размер файла не должен превышать 512 КБ', { type: 'error' })
+    return toast(`Размер файла не должен превышать ${MAX_SIZE / (1024 * 1024)} МБ`, { type: 'error' })
 
   file.value = picked
   extracted.value = false
