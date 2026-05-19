@@ -5,4 +5,5 @@ export interface IAuthUser {
   roles: string[]
   fileCount?: number
   authMethods?: string[]
+  createdAt?: string
 }
