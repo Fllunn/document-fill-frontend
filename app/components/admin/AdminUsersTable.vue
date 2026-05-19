@@ -5,11 +5,13 @@ defineProps<{
   users: IAuthUser[]
   loading: boolean
   total: number
+  search: string
 }>()
 
 const emit = defineEmits<{
   delete: [id: string]
   'update:options': [options: { page: number; itemsPerPage: number; sortBy: { key: string; order: 'asc' | 'desc' }[] }]
+  'update:search': [value: string]
 }>()
 
 const headers = [
@@ -35,6 +37,19 @@ const menuOpen = ref<Record<string, boolean>>({})
     item-value="_id"
     @update:options="emit('update:options', $event)"
   >
+    <template #top>
+      <v-text-field
+        :model-value="search"
+        variant="outlined"
+        label="Поиск по имени или email"
+        prepend-inner-icon="mdi-magnify"
+        class=""
+        clearable
+        hide-details
+        density="compact"
+        @update:model-value="emit('update:search', $event ?? '')"
+      />
+    </template>
     <template #item.roles="{ item }">
       {{ item.roles?.join(', ') ?? '-' }}
     </template>

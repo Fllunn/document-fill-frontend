@@ -5,11 +5,11 @@ definePageMeta({
   middleware: "admin"
 })
 
-const { users, total, page, limit, sortByField, order, loading, fetchUsers, deleteUser } = useAdminUsers()
+const { users, total, page, limit, sortByField, order, search, loading, fetchUsers, deleteUser } = useAdminUsers()
 
 await fetchUsers()
 
-watch([page, limit, sortByField, order], fetchUsers)
+watch([page, limit, sortByField, order, search], fetchUsers)
 
 const handleOptions = (opts: { page: number; itemsPerPage: number; sortBy: { key: string; order: 'asc' | 'desc' }[] }) => {
   const sort = opts.sortBy[0]
@@ -17,6 +17,11 @@ const handleOptions = (opts: { page: number; itemsPerPage: number; sortBy: { key
   limit.value = opts.itemsPerPage
   sortByField.value = sort?.key ?? 'createdAt'
   order.value = sort?.order ?? 'desc'
+}
+
+const handleSearch = (value: string) => {
+  page.value = 1
+  search.value = value
 }
 </script>
 
@@ -28,8 +33,10 @@ const handleOptions = (opts: { page: number; itemsPerPage: number; sortBy: { key
           :users="users"
           :loading="loading"
           :total="total"
+          :search="search"
           @delete="deleteUser"
           @update:options="handleOptions"
+          @update:search="handleSearch"
         />
       </v-col>
     </v-row>

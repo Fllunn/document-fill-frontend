@@ -10,6 +10,7 @@ export const useAdminUsers = () => {
   const limit = ref(20)
   const sortByField = ref('createdAt')
   const order = ref<'asc' | 'desc'>('desc')
+  const search = ref('')
   const loading = ref(false)
 
   const fetchUsers = async () => {
@@ -20,6 +21,7 @@ export const useAdminUsers = () => {
         limit: limit.value,
         sortBy: sortByField.value,
         order: order.value,
+        search: search.value || undefined,
       })
       if (data) {
         users.value = data.users
@@ -42,5 +44,5 @@ export const useAdminUsers = () => {
     }
   }
 
-  return { users, total, page, limit, sortByField, order, loading, fetchUsers, deleteUser }
+  return { users, total, page, limit, sortByField, order, search, loading, fetchUsers, deleteUser }
 }
