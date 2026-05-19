@@ -36,7 +36,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 				ripple: false,
 			},
 		},
-		ssr: true,
+		ssr: { clientWidth: 1280 },
 	})
 
 	nuxtApp.vueApp.use(vuetify)
