@@ -1,5 +1,4 @@
 import TemplatesApi from "../../api/TemplatesApi";
-import type { ITemplate } from "~/types/template.interface";
 import type { VariablesState } from "~/types/state/template.interface";
 
 export function useVariablesTemplate() {
@@ -10,8 +9,8 @@ export function useVariablesTemplate() {
   }))
 
   async function getVariables(templateId: string) {
-    state.value.loading = true // loading started
-    state.value.error = null // reset previous errors
+    state.value.loading = true
+    state.value.error = null
 
     try {
       const res = await TemplatesApi.getVariables(templateId)
@@ -27,7 +26,7 @@ export function useVariablesTemplate() {
 
       return false
     } finally {
-      state.value.loading = false // loading ended
+      state.value.loading = false
     }
   }
 
