@@ -13,6 +13,7 @@ const file = ref<File | null>(null)
 const extracted = ref(false)
 const isDragging = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+const fillFormSection = ref<HTMLElement | null>(null)
 
 const { fileSize } = useFileSize(file)
 
@@ -35,7 +36,17 @@ function onDrop(e: DragEvent) {
 async function submit() {
   if (!file.value) return
   const success = await extract(file.value)
-  if (success) extracted.value = true
+  if (success) {
+    extracted.value = true
+    await nextTick()
+    await nextTick()
+    const sectionEl = (fillFormSection.value as any)?.$el as HTMLElement | undefined
+    const firstTitle = sectionEl?.querySelector<HTMLElement>('.v-card-title')
+    if (firstTitle) {
+      const top = firstTitle.getBoundingClientRect().top + window.scrollY - 64
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }
 }
 
 function reset() {
@@ -112,7 +123,7 @@ function reset() {
         </v-card>
       </v-col>
 
-      <v-col v-if="extracted && file" cols="12">
+      <v-col v-if="extracted && file" ref="fillFormSection" cols="12">
         <TemplatesFillForm
           :file="file"
           :external-data="variables"
