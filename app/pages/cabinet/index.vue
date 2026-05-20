@@ -10,6 +10,7 @@ const { isAdmin } = useRole()
 
 const templates = ref<ITemplate[]>([])
 const loading = ref(false)
+const downloadingIds = ref(new Set<string>())
 
 const systemTemplates = computed(() => templates.value.filter((t) => t.storageType === 'system'))
 const userTemplates = computed(() => templates.value.filter((t) => t.storageType === 'user'))
@@ -25,14 +26,24 @@ async function fetchTemplates(): Promise<void> {
 }
 
 async function downloadTemplate(templateId: string, name: string): Promise<void> {
-  const blob = await TemplatesApi.download(templateId)
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
+  if (downloadingIds.value.has(templateId)) return
 
-  a.href = url
-  a.download = `${name}.docx`
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadingIds.value.add(templateId)
+  downloadingIds.value = new Set(downloadingIds.value)
+
+  try {
+    const blob = await TemplatesApi.download(templateId)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+
+    a.href = url
+    a.download = `${name}.docx`
+    a.click()
+    URL.revokeObjectURL(url)
+  } finally {
+    downloadingIds.value.delete(templateId)
+    downloadingIds.value = new Set(downloadingIds.value)
+  }
 }
 
 async function deleteTemplate(templateId: string): Promise<void> {
@@ -137,7 +148,7 @@ onMounted(fetchTemplates)
         <v-col v-for="template in userTemplates" :key="template._id" v-bind="userTemplateCols">
           <TemplatesFileCard
             :title="template.name"
-            :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary', loading: downloadingIds.has(template._id) }"
             :fill-button="{ icon: 'mdi-form-select', tooltip: 'Заполнить', color: 'success' }"
             :rename-button="{ icon: 'mdi-pencil-outline', tooltip: 'Редактировать', color: 'secondary' }"
             :delete-button="{ icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' }"
@@ -159,7 +170,7 @@ onMounted(fetchTemplates)
         <v-col v-for="template in systemTemplates" :key="template._id" v-bind="systemTemplateCols">
           <TemplatesFileCard
             :title="template.name"
-            :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary' }"
+            :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary', loading: downloadingIds.has(template._id) }"
             :fill-button="{ icon: 'mdi-form-select', tooltip: 'Заполнить', color: 'success' }"
             :rename-button="isAdmin ? { icon: 'mdi-pencil-outline', tooltip: 'Редактировать', color: 'secondary' } : undefined"
             :delete-button="isAdmin ? { icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' } : undefined"
