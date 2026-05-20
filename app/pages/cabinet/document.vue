@@ -12,7 +12,6 @@ const MAX_SIZE = 1 * 1024 * 1024
 const file = ref<File | null>(null)
 const extracted = ref(false)
 const isDragging = ref(false)
-const fileInput = ref<HTMLInputElement | null>(null)
 const fillFormSection = ref<HTMLElement | null>(null)
 
 const { fileSize } = useFileSize(file)
@@ -49,11 +48,6 @@ async function submit() {
   }
 }
 
-function reset() {
-  file.value = null
-  extracted.value = false
-  if (fileInput.value) fileInput.value.value = ''
-}
 </script>
 
 <template>
@@ -90,7 +84,6 @@ function reset() {
             </v-card-text>
 
             <input
-              ref="fileInput"
               type="file"
               accept=".docx"
               class="d-none"
@@ -105,9 +98,7 @@ function reset() {
               <TemplatesFileCard
                 :title="file.name"
                 :subtitle="fileSize"
-                action-icon="mdi-close"
                 class="flex-grow-1"
-                @action="reset"
               />
 
               <v-btn

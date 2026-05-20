@@ -2,7 +2,7 @@
 import { toast } from 'vue3-toastify'
 import { useUploadTemplate } from '~/composables/Templates/useUploadTemplate'
 
-const { state, createFromFile } = useUploadTemplate()
+const { state, loading, createFromFile } = useUploadTemplate()
 const { isAdmin } = useRole()
 
 const emit = defineEmits<{ uploaded: [] }>()
@@ -28,7 +28,6 @@ function setFile(picked: File | undefined) {
 
 function onDrop(e: DragEvent) {
   isDragging.value = false
-  
   setFile(e.dataTransfer?.files[0])
 }
 
@@ -98,14 +97,13 @@ async function submit() {
         <TemplatesFileCard
           :title="file.name"
           :subtitle="fileSize"
-          action-icon="mdi-close"
           class="flex-grow-1"
-          @action="file = null"
         />
 
         <v-btn
           color="primary"
           variant="outlined"
+          :loading="loading"
           @click="submit"
         >
           Загрузить

@@ -5,6 +5,7 @@ export type ButtonConfig = {
   tooltip?: string
   confirmText?: string
   confirmLabel?: string
+  loading?: boolean
 }
 
 type Props = {
@@ -51,7 +52,7 @@ function handleEmit(event: 'action' | 'fill' | 'rename' | 'delete') {
             <template #activator="{ props: menuProps }">
               <v-tooltip :text="btn.config.tooltip" :disabled="!btn.config.tooltip" location="top">
                 <template #activator="{ props: tooltipProps }">
-                  <v-btn v-bind="{ ...menuProps, ...tooltipProps }" :icon="btn.config.icon" :color="btn.config.color" variant="text" size="small" />
+                  <v-btn v-bind="{ ...menuProps, ...tooltipProps }" :icon="btn.config.icon" :color="btn.config.color" :loading="btn.config.loading" variant="text" size="small" />
                 </template>
               </v-tooltip>
             </template>
@@ -69,7 +70,7 @@ function handleEmit(event: 'action' | 'fill' | 'rename' | 'delete') {
 
           <v-tooltip v-else :text="btn.config.tooltip" :disabled="!btn.config.tooltip" location="top">
             <template #activator="{ props: tooltipProps }">
-              <v-btn v-bind="tooltipProps" :icon="btn.config.icon" :color="btn.config.color" variant="text" size="small" @click="handleEmit(btn.event)" />
+              <v-btn v-bind="tooltipProps" :icon="btn.config.icon" :color="btn.config.color" :loading="btn.config.loading" variant="text" size="small" @click="handleEmit(btn.event)" />
             </template>
           </v-tooltip>
         </template>
