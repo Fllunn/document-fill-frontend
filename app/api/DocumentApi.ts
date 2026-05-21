@@ -2,10 +2,10 @@ export const useDocumentApi = () => {
   const { $apiFetch } = useNuxtApp()
 
   return {
-    create(templateId: string, values: Record<string, any>, name?: string, format?: 'docx' | 'pdf') {
+    create(templateId: string, values: Record<string, any>, name?: string, format?: 'docx' | 'pdf', namePattern?: string) {
       return $apiFetch<Blob>('/documents', {
         method: 'POST',
-        body: { templateId, values, name },
+        body: { templateId, values, name, namePattern },
         responseType: 'blob',
         params: format ? { format } : undefined,
       })

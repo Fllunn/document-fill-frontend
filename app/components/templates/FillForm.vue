@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { toast } from 'vue3-toastify'
 import { useVariablesTemplate } from '~/composables/Templates/useVariablesTemplate'
+import { useTemplateNames } from '~/composables/Templates/useTemplateNames'
 import { useDocumentCreate } from '~/composables/Documents/useDocumentCreate'
 import { useDocumentUpdate } from '~/composables/Documents/useDocumentUpdate'
 import { useFieldNavigation } from '~/composables/Templates/useFieldNavigation'
@@ -17,6 +19,7 @@ type Props = {
 const props = defineProps<Props>()
 
 const { state, getVariables } = useVariablesTemplate()
+const { patterns: savedPatterns, load: loadPatterns, remove: removePattern } = useTemplateNames()
 const { loading: creating, create } = useDocumentCreate()
 const { loading: updating, update } = useDocumentUpdate()
 
@@ -24,7 +27,7 @@ const generating = computed(() => creating.value || updating.value)
 
 const values = ref<Record<string, string>>({})
 const loopValues = ref<Record<string, Record<string, string>[]>>({})
-const docName = ref(props.externalDocName ?? '')
+const namePattern = ref(props.externalDocName ?? '')
 
 const simpleCategories = computed(() =>
   Object.fromEntries(
@@ -74,10 +77,14 @@ onMounted(async () => {
       }
     }
   }
+
+  if (props.templateId) {
+    await loadPatterns(props.templateId)
+  }
 })
 
 watch(() => props.externalDocName, (val) => {
-  if (val !== undefined) docName.value = val
+  if (val !== undefined) namePattern.value = val
 })
 
 function addRow(category: string) {
@@ -103,15 +110,63 @@ function buildValues(): Record<string, any> {
   return result
 }
 
+function buildFlatValues(): Record<string, string> {
+  const flat: Record<string, string> = {}
+  for (const [key, value] of Object.entries(values.value)) {
+    flat[key.startsWith('Разное.') ? key.slice(7) : key] = value
+  }
+  return flat
+}
+
+function resolvePattern(pattern: string, flat: Record<string, string>): string {
+  return pattern.replace(/\{([^}]+)\}/g, (_, key) => flat[key] ?? `{${key}}`)
+}
+
+function validatePattern(pattern: string, flat: Record<string, string>): { unknown: string[], empty: string[] } {
+  const unknown = new Set<string>()
+  const empty = new Set<string>()
+  pattern.replace(/\{([^}]+)\}/g, (_, key) => {
+    if (!(key in flat)) unknown.add(key)
+    else if (!flat[key]) empty.add(key)
+    return ''
+  })
+  return { unknown: [...unknown], empty: [...empty] }
+}
+
 const activeFormat = ref<'docx' | 'pdf' | null>(null)
 
 async function generate(format: 'docx' | 'pdf') {
-  activeFormat.value = format
-  if (props.file) {
-    await update(props.file, buildValues(), docName.value || undefined, format)
-  } else {
-    await create(props.templateId!, buildValues(), docName.value || undefined, format)
+  const pattern = namePattern.value.trim()
+
+  const flat = buildFlatValues()
+
+  if (pattern) {
+    const { unknown, empty } = validatePattern(pattern, flat)
+    if (unknown.length) {
+      toast.error(`Этих полей нет в шаблоне: ${unknown.join(', ')}`)
+      return
+    }
+    if (empty.length) {
+      toast.error(`Заполните переменные, чтобы сохранить файл: ${empty.join(', ')}`)
+      return
+    }
   }
+
+  const resolvedName = pattern ? resolvePattern(pattern, flat) : undefined
+  const hasVariables = /\{[^}]+\}/.test(pattern)
+  const patternToSend = pattern && hasVariables ? pattern : undefined
+
+  activeFormat.value = format
+
+  if (props.file) {
+    await update(props.file, buildValues(), resolvedName, format)
+  } else {
+    const success = await create(props.templateId!, buildValues(), resolvedName, format, patternToSend)
+    if (success && props.templateId) {
+      await loadPatterns(props.templateId)
+    }
+  }
+
   activeFormat.value = null
 }
 
@@ -239,15 +294,37 @@ const {
 
       <v-col cols="12" class="pt-4 d-flex justify-center">
         <v-row justify="center" align="center" style="max-width: 700px; width: 100%">
+          <span class="text-medium-emphasis mt-1 py-2">
+              Вы можете использовать поля шаблона для названия документа, например {ФИО}
+            </span>
           <v-col cols="12">
-            <UiTextField v-model="docName" label="Название документа" hide-details :autofocus="false" />
+            <v-combobox
+              v-model="namePattern"
+              :items="savedPatterns"
+              label="Название документа"
+              variant="outlined"
+              hide-details
+              clearable
+            >
+              <template #item="{ item, props: itemProps }">
+                <v-list-item v-bind="itemProps" :title="item.raw">
+                  <template #append>
+                    <v-btn
+                      icon="mdi-close"
+                      size="x-small"
+                      variant="text"
+                      @click.stop="removePattern(templateId!, item.raw)"
+                    />
+                  </template>
+                </v-list-item>
+              </template>
+            </v-combobox>
           </v-col>
           <v-col cols="12" class="d-flex flex-column align-center">
             <div class="d-flex align-center">
               <v-btn
                 color="primary"
                 variant="elevated"
-
                 :loading="generating && activeFormat === 'docx'"
                 :disabled="generating"
                 @click="generate('docx')"
@@ -255,24 +332,18 @@ const {
                 Скачать DOCX
               </v-btn>
               <v-btn
-                icon
-                variant="text"
-                size="small"
-                class="ml-1"
+                variant="elevated"
+                class="ml-2"
+                :loading="generating && activeFormat === 'pdf'"
+                color="primary"
                 :disabled="generating"
+                @click="generate('pdf')"
               >
-                <v-icon>mdi-chevron-down</v-icon>
-                <v-menu activator="parent" location="bottom end">
-                  <v-list>
-                    <v-list-item @click="generate('pdf')">
-                      <v-list-item-title>Скачать PDF</v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
+                Скачать PDF
               </v-btn>
             </div>
             <span class="text-medium-emphasis mt-1 py-2">
-              Формат DOCX (word) позволяет изменять документ в дальнейшем<br>Вы также можете скачать PDF, но его нельзя будет отредактировать
+              Формат DOCX (word) позволяет изменять документ в дальнейшем<br>Вы можете скачать PDF, но его нельзя будет отредактировать
             </span>
           </v-col>
         </v-row>
