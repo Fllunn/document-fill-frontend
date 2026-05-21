@@ -5,14 +5,14 @@ export const useDocumentUpdate = () => {
   const api = useDocumentApi()
   const loading = ref(false)
 
-  async function update(file: File, values: Record<string, any>, name?: string): Promise<boolean> {
+  async function update(file: File, values: Record<string, any>, name?: string, format: 'docx' | 'pdf' = 'docx'): Promise<boolean> {
     loading.value = true
     try {
-      const blob = await api.update(file, values, name)
+      const blob = await api.update(file, values, name, format)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${name ?? 'document'}.docx`
+      a.download = `${name ?? 'document'}.${format}`
       document.body.appendChild(a)
       a.click()
       

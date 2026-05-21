@@ -103,12 +103,16 @@ function buildValues(): Record<string, any> {
   return result
 }
 
-function generate() {
+const activeFormat = ref<'docx' | 'pdf' | null>(null)
+
+async function generate(format: 'docx' | 'pdf') {
+  activeFormat.value = format
   if (props.file) {
-    update(props.file, buildValues(), docName.value || undefined)
+    await update(props.file, buildValues(), docName.value || undefined, format)
   } else {
-    create(props.templateId!, buildValues(), docName.value || undefined)
+    await create(props.templateId!, buildValues(), docName.value || undefined, format)
   }
+  activeFormat.value = null
 }
 
 const {
@@ -235,13 +239,41 @@ const {
 
       <v-col cols="12" class="pt-4 d-flex justify-center">
         <v-row justify="center" align="center" style="max-width: 700px; width: 100%">
-          <v-col cols="12" sm="7">
+          <v-col cols="12">
             <UiTextField v-model="docName" label="Название документа" hide-details :autofocus="false" />
           </v-col>
-          <v-col cols="12" sm="5" class="d-flex align-center">
-            <v-btn color="primary" :loading="generating" block @click="generate">
-              Создать документ
-            </v-btn>
+          <v-col cols="12" class="d-flex flex-column align-center">
+            <div class="d-flex align-center">
+              <v-btn
+                color="primary"
+                variant="elevated"
+
+                :loading="generating && activeFormat === 'docx'"
+                :disabled="generating"
+                @click="generate('docx')"
+              >
+                Скачать DOCX
+              </v-btn>
+              <v-btn
+                icon
+                variant="text"
+                size="small"
+                class="ml-1"
+                :disabled="generating"
+              >
+                <v-icon>mdi-chevron-down</v-icon>
+                <v-menu activator="parent" location="bottom end">
+                  <v-list>
+                    <v-list-item @click="generate('pdf')">
+                      <v-list-item-title>Скачать PDF</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </v-btn>
+            </div>
+            <span class="text-medium-emphasis mt-1 py-2">
+              Формат DOCX (word) позволяет изменять документ в дальнейшем<br>Вы также можете скачать PDF, но его нельзя будет отредактировать
+            </span>
           </v-col>
         </v-row>
       </v-col>
