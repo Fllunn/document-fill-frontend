@@ -19,8 +19,15 @@ export const useDocumentUpdate = () => {
       document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(url), 100)
       return true
-    } catch {
-      toast.error('Ошибка при обновлении документа')
+    } catch (error: any) {
+      const blob: Blob | undefined = error?.data
+
+      const json = blob instanceof Blob ? JSON.parse(await blob.text()) : (error?.data ?? {})
+
+      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? '')
+
+      toast.error(msg || 'Ошибка при обновлении документа')
+      
       return false
     } finally {
       loading.value = false

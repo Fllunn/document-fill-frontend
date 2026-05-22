@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { toast } from 'vue3-toastify'
 import { useFieldActions } from '~/composables/Templates/useFieldActions'
+import type { ImageValue } from '~/types/image.interface'
 
 type Props = {
-  modelValue: string
+  modelValue: string | ImageValue
+  currentImageBytes?: number
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
+  'update:modelValue': [value: string | ImageValue]
+  'set-image-name': [name: string]
 }>()
 
 const { declenseFio, numberToWords, insertDate } = useFieldActions()
@@ -39,6 +42,67 @@ const dateItems = [
   { label: 'Сегодня, месяц', format: 'month' },
   { label: 'Сегодня, год', format: 'year' },
 ] as const
+
+const ALLOWED_FORMATS = ['image/png', 'image/jpeg', 'image/svg+xml']
+const MAX_IMAGE_BYTES = 256 * 1024
+
+function toBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      const result = reader.result as string
+      resolve(result.substring(result.indexOf(',') + 1))
+    }
+
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function getDimensions(source: string, format: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve) => {
+    const img = new Image()
+
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+
+    img.onerror = () => resolve({ width: 0, height: 0 })
+    
+    img.src = `data:${format};base64,${source}`
+  })
+}
+
+async function handleFileSelect(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+
+  const format = file.type === 'image/jpg' ? 'image/jpeg' : file.type
+
+  if (!ALLOWED_FORMATS.includes(format)) {
+    toast.error('Недопустимый формат. Разрешены: PNG, JPEG, SVG')
+    return
+  }
+
+  if (file.size > MAX_IMAGE_BYTES) {
+    toast.error('Размер изображения превышает 256 КБ')
+    return
+  }
+
+  const existingBytes = props.currentImageBytes ?? 0
+  if (existingBytes + file.size > 1024 * 1024) {
+    toast.error('Суммарный размер всех изображений должен быть меньше 1 МБ')
+    return
+  }
+
+  const source = await toBase64(file)
+  const { width, height } = await getDimensions(source, format)
+
+  emit('update:modelValue', { _type: 'image', source, format, width, height })
+  emit('set-image-name', file.name)
+  menu.value = false
+}
 </script>
 
 <template>
@@ -63,14 +127,14 @@ const dateItems = [
           :key="item.case"
           :title="item.label"
           class="pl-8"
-          @click="apply(declenseFio(props.modelValue, item.case), 'Введите ФИО')"
+          @click="apply(declenseFio(props.modelValue as string, item.case), 'Введите ФИО')"
         />
       </v-list-group>
 
       <v-list-item
         prepend-icon="mdi-numeric"
         title="Число прописью"
-        @click="apply(numberToWords(props.modelValue), 'Введите число')"
+        @click="apply(numberToWords(props.modelValue as string), 'Введите число')"
       />
 
       <v-list-group value="date">
@@ -86,6 +150,16 @@ const dateItems = [
           @click="apply(insertDate(item.format), '')"
         />
       </v-list-group>
+
+      <v-list-item prepend-icon="mdi-image" style="position: relative; overflow: hidden;">
+        <template #title>Вставить фото</template>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+          style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;"
+          @change="handleFileSelect"
+        />
+      </v-list-item>
     </v-list>
   </v-menu>
 </template>
