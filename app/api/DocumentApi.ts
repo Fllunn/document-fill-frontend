@@ -2,11 +2,12 @@ export const useDocumentApi = () => {
   const { $apiFetch } = useNuxtApp()
 
   return {
-    create(templateId: string, values: Record<string, any>, name?: string) {
+    create(templateId: string, values: Record<string, any>, name?: string, format?: 'docx' | 'pdf', namePattern?: string) {
       return $apiFetch<Blob>('/documents', {
         method: 'POST',
-        body: { templateId, values, name },
+        body: { templateId, values, name, namePattern },
         responseType: 'blob',
+        params: format ? { format } : undefined,
       })
     },
 
@@ -19,7 +20,7 @@ export const useDocumentApi = () => {
       })
     },
 
-    update(file: File, values: Record<string, any>, name?: string) {
+    update(file: File, values: Record<string, any>, name?: string, format?: 'docx' | 'pdf') {
       const form = new FormData()
       form.append('file', file)
       form.append('values', JSON.stringify(values))
@@ -28,6 +29,7 @@ export const useDocumentApi = () => {
         method: 'POST',
         body: form,
         responseType: 'blob',
+        params: format ? { format } : undefined,
       })
     },
   }

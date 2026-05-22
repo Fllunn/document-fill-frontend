@@ -56,6 +56,18 @@ export default {
     return $apiFetch<Record<string, string[]>>(`/templates/${templateId}/variables`, { method: 'GET' })
   },
 
+  getNames(templateId: string): Promise<string[]> {
+    const { $apiFetch } = useNuxtApp()
+
+    return $apiFetch<string[]>(`/templates/${templateId}/names`, { method: 'GET' })
+  },
+
+  removeSavedName(templateId: string, pattern: string): Promise<boolean> {
+    const { $apiFetch } = useNuxtApp()
+
+    return $apiFetch<boolean>(`/templates/${templateId}/names`, { method: 'DELETE', body: { pattern } })
+  },
+
   download(templateId: string): Promise<Blob> {
     const { $apiFetch } = useNuxtApp()
 

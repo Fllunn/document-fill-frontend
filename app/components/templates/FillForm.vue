@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { toast } from 'vue3-toastify'
 import { useVariablesTemplate } from '~/composables/Templates/useVariablesTemplate'
+import { useTemplateNames } from '~/composables/Templates/useTemplateNames'
 import { useDocumentCreate } from '~/composables/Documents/useDocumentCreate'
 import { useDocumentUpdate } from '~/composables/Documents/useDocumentUpdate'
 import { useFieldNavigation } from '~/composables/Templates/useFieldNavigation'
 import type { VariablesState } from '~/types/state/template.interface'
+import type { ImageValue } from '~/types/image.interface'
+import { isImageValue } from '~/types/image.interface'
 
 type Props = {
   templateId?: string
@@ -17,14 +21,31 @@ type Props = {
 const props = defineProps<Props>()
 
 const { state, getVariables } = useVariablesTemplate()
+const { patterns: savedPatterns, load: loadPatterns, remove: removePattern } = useTemplateNames()
 const { loading: creating, create } = useDocumentCreate()
 const { loading: updating, update } = useDocumentUpdate()
 
 const generating = computed(() => creating.value || updating.value)
 
-const values = ref<Record<string, string>>({})
-const loopValues = ref<Record<string, Record<string, string>[]>>({})
-const docName = ref(props.externalDocName ?? '')
+const currentImageBytes = computed(() => {
+  let total = 0
+  for (const val of Object.values(values.value)) {
+    if (isImageValue(val)) total += val.source.length * 0.75
+  }
+  for (const rows of Object.values(loopValues.value)) {
+    for (const row of rows) {
+      for (const val of Object.values(row)) {
+        if (isImageValue(val)) total += val.source.length * 0.75
+      }
+    }
+  }
+  return total
+})
+
+const values = ref<Record<string, string | ImageValue>>({})
+const loopValues = ref<Record<string, Record<string, string | ImageValue>[]>>({})
+const imageNames = ref<Record<string, string>>({})
+const namePattern = ref(props.externalDocName ?? '')
 
 const simpleCategories = computed(() =>
   Object.fromEntries(
@@ -74,10 +95,14 @@ onMounted(async () => {
       }
     }
   }
+
+  if (props.templateId) {
+    await loadPatterns(props.templateId)
+  }
 })
 
 watch(() => props.externalDocName, (val) => {
-  if (val !== undefined) docName.value = val
+  if (val !== undefined) namePattern.value = val
 })
 
 function addRow(category: string) {
@@ -87,6 +112,29 @@ function addRow(category: string) {
 
 function removeRow(category: string, index: number) {
   loopValues.value[category]!.splice(index, 1)
+}
+
+function getImageSrc(val: string | ImageValue | undefined): string {
+  if (!isImageValue(val)) return ''
+  return `data:${val.format};base64,${val.source}`
+}
+
+function clearImageValue(key: string) {
+  values.value[key] = ''
+  delete imageNames.value[key]
+}
+
+function createImageRef(el: any) {
+  return {
+    focus: () => {},
+    focusEnd: () => {},
+    getInput: (): HTMLElement | null => el?.$el ?? null,
+  }
+}
+
+function clearLoopImageValue(category: string, rowIndex: number, variable: string) {
+  loopValues.value[category]![rowIndex]![variable] = ''
+  delete imageNames.value[`${category}.${rowIndex}.${variable}`]
 }
 
 function buildValues(): Record<string, any> {
@@ -103,12 +151,87 @@ function buildValues(): Record<string, any> {
   return result
 }
 
-function generate() {
-  if (props.file) {
-    update(props.file, buildValues(), docName.value || undefined)
-  } else {
-    create(props.templateId!, buildValues(), docName.value || undefined)
+function buildFlatValues(): Record<string, string> {
+  const flat: Record<string, string> = {}
+  for (const [key, value] of Object.entries(values.value)) {
+    if (typeof value === 'string') {
+      flat[key.startsWith('Разное.') ? key.slice(7) : key] = value
+    }
   }
+  return flat
+}
+
+function resolvePattern(pattern: string, flat: Record<string, string>): string {
+  return pattern.replace(/\{([^}]+)\}/g, (_, key) => flat[key] ?? `{${key}}`)
+}
+
+function validatePattern(pattern: string, flat: Record<string, string>): { unknown: string[], empty: string[] } {
+  const unknown = new Set<string>()
+  const empty = new Set<string>()
+  pattern.replace(/\{([^}]+)\}/g, (_, key) => {
+    if (!(key in flat)) unknown.add(key)
+    else if (!flat[key]) empty.add(key)
+    return ''
+  })
+  return { unknown: [...unknown], empty: [...empty] }
+}
+
+const activeFormat = ref<'docx' | 'pdf' | null>(null)
+
+async function generate(format: 'docx' | 'pdf') {
+  const pattern = namePattern.value.trim()
+
+  const flat = buildFlatValues()
+
+  if (pattern) {
+    const { unknown, empty } = validatePattern(pattern, flat)
+    if (unknown.length) {
+      toast.error(`Этих полей нет в шаблоне: ${unknown.join(', ')}`)
+      return
+    }
+    if (empty.length) {
+      toast.error(`Заполните переменные, чтобы сохранить файл: ${empty.join(', ')}`)
+      return
+    }
+  }
+
+  const allImageSources: string[] = []
+
+  for (const val of Object.values(values.value)) {
+    if (isImageValue(val)) allImageSources.push(val.source)
+  }
+
+  for (const rows of Object.values(loopValues.value)) {
+    for (const row of rows) {
+      for (const val of Object.values(row)) {
+        if (isImageValue(val)) allImageSources.push(val.source)
+      }
+    }
+  }
+
+  const totalApproxBytes = allImageSources.reduce((s, src) => s + src.length * 0.75, 0)
+  
+  if (totalApproxBytes > 1024 * 1024) {
+    toast.error('Суммарный размер изображений превышает 1 МБ')
+    return
+  }
+
+  const resolvedName = pattern ? resolvePattern(pattern, flat) : undefined
+  const hasVariables = /\{[^}]+\}/.test(pattern)
+  const patternToSend = pattern && hasVariables ? pattern : undefined
+
+  activeFormat.value = format
+
+  if (props.file) {
+    await update(props.file, buildValues(), resolvedName, format)
+  } else {
+    const success = await create(props.templateId!, buildValues(), resolvedName, format, patternToSend)
+    if (success && props.templateId) {
+      await loadPatterns(props.templateId)
+    }
+  }
+
+  activeFormat.value = null
 }
 
 const {
@@ -138,25 +261,57 @@ const {
         </v-col>
 
         <v-col v-for="variable in vars" :key="variable" cols="12" sm="6" md="4" class="pt-0 pb-1">
-          <UiTextField
-            :ref="(el) => { const k = `${String(category)}.${variable}`; if (el) simpleFieldRefs.set(k, el as any); else simpleFieldRefs.delete(k) }"
-            :model-value="values[`${category}.${variable}`] ?? ''"
-            :label="variable"
-            :autofocus="false"
-            @update:model-value="values[`${category}.${variable}`] = $event"
-            @enter="onSimpleEnter(String(category), variable)"
-            @arrow-left="onArrowLeft(`${String(category)}.${variable}`)"
-            @arrow-right="onArrowRight(`${String(category)}.${variable}`)"
-            @arrow-up="onSimpleArrowUp(String(category), variable)"
-            @arrow-down="onSimpleArrowDown(String(category), variable)"
-          >
-            <template #append-inner>
-              <TemplatesFieldActionMenu
-                :model-value="values[`${category}.${variable}`] ?? ''"
-                @update:model-value="values[`${category}.${variable}`] = $event"
-              />
-            </template>
-          </UiTextField>
+          <template v-if="isImageValue(values[`${String(category)}.${variable}`])">
+            <v-card
+              :ref="(el) => { const k = `${String(category)}.${variable}`; if (el) simpleFieldRefs.set(k, createImageRef(el)); else simpleFieldRefs.delete(k) }"
+              variant="outlined"
+              class="pa-2"
+            >
+              <div class="text-caption text-medium-emphasis mb-1">{{ variable }}</div>
+              <div class="d-flex align-center gap-2">
+                <v-img
+                  :src="getImageSrc(values[`${String(category)}.${variable}`])"
+                  width="40"
+                  height="40"
+                  cover
+                  draggable="false"
+                  class="rounded flex-grow-0"
+                />
+                <span class="text-body-2 flex-grow-1 text-truncate">
+                  {{ imageNames[`${String(category)}.${variable}`] }}
+                </span>
+                <v-btn
+                  icon="mdi-close"
+                  size="x-small"
+                  variant="text"
+                  @click="clearImageValue(`${String(category)}.${variable}`)"
+                />
+              </div>
+            </v-card>
+          </template>
+          <template v-else>
+            <UiTextField
+              :ref="(el) => { const k = `${String(category)}.${variable}`; if (el) simpleFieldRefs.set(k, el as any); else simpleFieldRefs.delete(k) }"
+              :model-value="(values[`${category}.${variable}`] as string) ?? ''"
+              :label="variable"
+              :autofocus="false"
+              @update:model-value="values[`${category}.${variable}`] = $event"
+              @enter="onSimpleEnter(String(category), variable)"
+              @arrow-left="onArrowLeft(`${String(category)}.${variable}`)"
+              @arrow-right="onArrowRight(`${String(category)}.${variable}`)"
+              @arrow-up="onSimpleArrowUp(String(category), variable)"
+              @arrow-down="onSimpleArrowDown(String(category), variable)"
+            >
+              <template #append-inner>
+                <TemplatesFieldActionMenu
+                  :model-value="(values[`${category}.${variable}`] as string) ?? ''"
+                  :current-image-bytes="currentImageBytes"
+                  @update:model-value="values[`${category}.${variable}`] = $event"
+                  @set-image-name="imageNames[`${String(category)}.${variable}`] = $event"
+                />
+              </template>
+            </UiTextField>
+          </template>
         </v-col>
       </template>
 
@@ -197,25 +352,56 @@ const {
                   md="4"
                   class="pb-1"
                 >
-                  <UiTextField
-                    :ref="(el) => { const k = `${String(category)}.${rowIndex}.${variable}`; if (el) loopFieldRefs.set(k, el as any); else loopFieldRefs.delete(k) }"
-                    :model-value="row[variable] ?? ''"
-                    :label="variable"
-                    :autofocus="false"
-                    @update:model-value="row[variable] = $event"
-                    @enter="onLoopEnter(String(category), rowIndex, variable)"
-                    @arrow-left="onArrowLeft(`${String(category)}.${rowIndex}.${variable}`)"
-                    @arrow-right="onArrowRight(`${String(category)}.${rowIndex}.${variable}`)"
-                    @arrow-up="onLoopArrowUp(String(category), rowIndex, variable)"
-                    @arrow-down="onLoopArrowDown(String(category), rowIndex, variable)"
-                  >
-                    <template #append-inner>
-                      <TemplatesFieldActionMenu
-                        :model-value="row[variable] ?? ''"
-                        @update:model-value="row[variable] = $event"
-                      />
-                    </template>
-                  </UiTextField>
+                  <template v-if="isImageValue(row[variable])">
+                    <v-card
+                      :ref="(el) => { const k = `${String(category)}.${rowIndex}.${variable}`; if (el) loopFieldRefs.set(k, createImageRef(el)); else loopFieldRefs.delete(k) }"
+                      variant="outlined"
+                      class="pa-2"
+                    >
+                      <div class="text-caption text-medium-emphasis mb-1">{{ variable }}</div>
+                      <div class="d-flex align-center gap-2">
+                        <v-img
+                          :src="getImageSrc(row[variable])"
+                          width="40"
+                          height="40"
+                          cover
+                          class="rounded flex-grow-0"
+                        />
+                        <span class="text-body-2 flex-grow-1 text-truncate">
+                          {{ imageNames[`${String(category)}.${rowIndex}.${variable}`] }}
+                        </span>
+                        <v-btn
+                          icon="mdi-close"
+                          size="x-small"
+                          variant="text"
+                          @click="clearLoopImageValue(String(category), rowIndex, variable)"
+                        />
+                      </div>
+                    </v-card>
+                  </template>
+                  <template v-else>
+                    <UiTextField
+                      :ref="(el) => { const k = `${String(category)}.${rowIndex}.${variable}`; if (el) loopFieldRefs.set(k, el as any); else loopFieldRefs.delete(k) }"
+                      :model-value="(row[variable] as string) ?? ''"
+                      :label="variable"
+                      :autofocus="false"
+                      @update:model-value="row[variable] = $event"
+                      @enter="onLoopEnter(String(category), rowIndex, variable)"
+                      @arrow-left="onArrowLeft(`${String(category)}.${rowIndex}.${variable}`)"
+                      @arrow-right="onArrowRight(`${String(category)}.${rowIndex}.${variable}`)"
+                      @arrow-up="onLoopArrowUp(String(category), rowIndex, variable)"
+                      @arrow-down="onLoopArrowDown(String(category), rowIndex, variable)"
+                    >
+                      <template #append-inner>
+                        <TemplatesFieldActionMenu
+                          :model-value="(row[variable] as string) ?? ''"
+                          :current-image-bytes="currentImageBytes"
+                          @update:model-value="row[variable] = $event"
+                          @set-image-name="imageNames[`${String(category)}.${rowIndex}.${variable}`] = $event"
+                        />
+                      </template>
+                    </UiTextField>
+                  </template>
                 </v-col>
               </v-row>
             </div>
@@ -235,13 +421,57 @@ const {
 
       <v-col cols="12" class="pt-4 d-flex justify-center">
         <v-row justify="center" align="center" style="max-width: 700px; width: 100%">
-          <v-col cols="12" sm="7">
-            <UiTextField v-model="docName" label="Название документа" hide-details :autofocus="false" />
+          <span class="text-medium-emphasis mt-1 py-2">
+              Вы можете использовать поля шаблона для названия документа, например {ФИО}
+            </span>
+          <v-col cols="12">
+            <v-combobox
+              v-model="namePattern"
+              :items="savedPatterns"
+              label="Название документа"
+              variant="outlined"
+              hide-details
+              clearable
+            >
+              <template #item="{ item, props: itemProps }">
+                <v-list-item v-bind="itemProps" :title="item.raw">
+                  <template #append>
+                    <v-btn
+                      icon="mdi-close"
+                      size="x-small"
+                      variant="text"
+                      @click.stop="removePattern(templateId!, item.raw)"
+                    />
+                  </template>
+                </v-list-item>
+              </template>
+            </v-combobox>
           </v-col>
-          <v-col cols="12" sm="5" class="d-flex align-center">
-            <v-btn color="primary" :loading="generating" block @click="generate">
-              Создать документ
-            </v-btn>
+          <v-col cols="12" class="d-flex flex-column align-center">
+            <div class="d-flex align-center">
+              <v-btn
+                color="primary"
+                variant="elevated"
+                :loading="generating && activeFormat === 'docx'"
+                :disabled="generating"
+                @click="generate('docx')"
+              >
+                Скачать DOCX
+              </v-btn>
+              <v-btn
+                variant="elevated"
+                class="ml-2"
+                :loading="generating && activeFormat === 'pdf'"
+                color="primary"
+                :disabled="generating"
+                @click="generate('pdf')"
+              >
+                Скачать PDF
+              </v-btn>
+            </div>
+            <span class="text-medium-emphasis mt-1 py-2">
+              Формат DOCX (word) позволяет изменять документ в дальнейшем<br>Вы можете скачать PDF, но его нельзя будет отредактировать
+            </span>
           </v-col>
         </v-row>
       </v-col>

@@ -1,11 +1,11 @@
 import type { ComputedRef, Ref } from 'vue'
 
-type FieldRef = { focus: () => void; focusEnd: () => void; getInput: () => HTMLInputElement | null }
+type FieldRef = { focus: () => void; focusEnd: () => void; getInput: () => HTMLElement | null }
 
 export function useFieldNavigation(
   simpleCategories: ComputedRef<Record<string, string[]>>,
   loopCategories: ComputedRef<Record<string, string[]>>,
-  loopValues: Ref<Record<string, Record<string, string>[]>>,
+  loopValues: Ref<Record<string, Record<string, unknown>[]>>,
   addRow: (category: string) => void
 ) {
   const simpleFieldRefs = new Map<string, FieldRef>()
