@@ -60,7 +60,7 @@ function handleEmit(event: 'action' | 'fill' | 'rename' | 'delete') {
               <v-card-text class="pb-0">{{ btn.config.confirmText }}</v-card-text>
               <v-card-actions>
                 <v-spacer />
-                <v-btn size="small" @click="menuOpen[btn.event] = false">Отмена</v-btn>
+                <v-btn size="small" :disabled="btn.config.loading" @click="menuOpen[btn.event] = false">Отмена</v-btn>
                 <v-btn size="small" :color="btn.config.color" @click="handleEmit(btn.event); menuOpen[btn.event] = false">
                   {{ btn.config.confirmLabel ?? 'Подтвердить' }}
                 </v-btn>
