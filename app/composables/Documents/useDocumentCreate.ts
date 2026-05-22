@@ -1,8 +1,10 @@
 import { useDocumentApi } from '~/api/DocumentApi'
+import { useSaveBlob } from '~/composables/Documents/useSaveBlob'
 import { toast } from 'vue3-toastify'
 
 export const useDocumentCreate = () => {
   const api = useDocumentApi()
+  const { saveBlob } = useSaveBlob()
   const loading = ref(false)
 
   async function create(
@@ -15,15 +17,9 @@ export const useDocumentCreate = () => {
     loading.value = true
     try {
       const blob = await api.create(templateId, values, name, format, namePattern)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${name ?? 'document'}.${format}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 100)
-      toast.success(`Документ "${name ?? 'document'}.${format}" создан`)
+      const filename = `${name ?? 'document'}.${format}`
+      await saveBlob(blob, filename, format)
+      toast.success(`Документ "${filename}" создан`)
       return true
     } catch (error: any) {
       const blob: Blob | undefined = error?.data

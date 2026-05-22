@@ -1,23 +1,17 @@
 import { useDocumentApi } from '~/api/DocumentApi'
+import { useSaveBlob } from '~/composables/Documents/useSaveBlob'
 import { toast } from 'vue3-toastify'
 
 export const useDocumentUpdate = () => {
   const api = useDocumentApi()
+  const { saveBlob } = useSaveBlob()
   const loading = ref(false)
 
   async function update(file: File, values: Record<string, any>, name?: string, format: 'docx' | 'pdf' = 'docx'): Promise<boolean> {
     loading.value = true
     try {
       const blob = await api.update(file, values, name, format)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${name ?? 'document'}.${format}`
-      document.body.appendChild(a)
-      a.click()
-      
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 100)
+      await saveBlob(blob, `${name ?? 'document'}.${format}`, format)
       return true
     } catch (error: any) {
       const blob: Blob | undefined = error?.data
