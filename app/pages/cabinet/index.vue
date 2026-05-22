@@ -11,6 +11,7 @@ const { isAdmin } = useRole()
 const templates = ref<ITemplate[]>([])
 const loading = ref(false)
 const downloadingIds = ref(new Set<string>())
+const deletingIds = ref(new Set<string>())
 
 const systemTemplates = computed(() => templates.value.filter((t) => t.storageType === 'system'))
 const userTemplates = computed(() => templates.value.filter((t) => t.storageType === 'user'))
@@ -47,15 +48,19 @@ async function downloadTemplate(templateId: string, name: string): Promise<void>
 }
 
 async function deleteTemplate(templateId: string): Promise<void> {
-  const saveTemplates = templates.value
-  templates.value = templates.value.filter((t) => t._id !== templateId)
+  if (deletingIds.value.has(templateId)) return
+
+  deletingIds.value.add(templateId)
+  deletingIds.value = new Set(deletingIds.value)
 
   try {
     await TemplatesApi.delete(templateId)
 
+    templates.value = templates.value.filter((t) => t._id !== templateId)
     toast('Шаблон успешно удален', { type: 'success' })
-  } catch {
-    templates.value = saveTemplates
+  } finally {
+    deletingIds.value.delete(templateId)
+    deletingIds.value = new Set(deletingIds.value)
   }
 }
 
@@ -151,7 +156,7 @@ onMounted(fetchTemplates)
             :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary', loading: downloadingIds.has(template._id) }"
             :fill-button="{ icon: 'mdi-form-select', tooltip: 'Заполнить', color: 'success' }"
             :rename-button="{ icon: 'mdi-pencil-outline', tooltip: 'Редактировать', color: 'secondary' }"
-            :delete-button="{ icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' }"
+            :delete-button="{ icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error', loading: deletingIds.has(template._id) }"
             @action="downloadTemplate(template._id, template.name)"
             @fill="navigateTo(`/cabinet/fill/${template._id}`)"
             @rename="openRenameDialog(template._id, template.name)"
@@ -173,7 +178,7 @@ onMounted(fetchTemplates)
             :action-button="{ icon: 'mdi-download-outline', tooltip: 'Скачать', confirmText: 'Скачать шаблон?', confirmLabel: 'Скачать', color: 'primary', loading: downloadingIds.has(template._id) }"
             :fill-button="{ icon: 'mdi-form-select', tooltip: 'Заполнить', color: 'success' }"
             :rename-button="isAdmin ? { icon: 'mdi-pencil-outline', tooltip: 'Редактировать', color: 'secondary' } : undefined"
-            :delete-button="isAdmin ? { icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error' } : undefined"
+            :delete-button="isAdmin ? { icon: 'mdi-delete-outline', tooltip: 'Удалить', confirmText: 'Удалить шаблон?', confirmLabel: 'Удалить', color: 'error', loading: deletingIds.has(template._id) } : undefined"
             @action="downloadTemplate(template._id, template.name)"
             @fill="navigateTo(`/cabinet/fill/${template._id}`)"
             @rename="openRenameDialog(template._id, template.name)"
