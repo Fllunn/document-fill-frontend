@@ -15,6 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const { declenseFio, numberToWords, insertDate } = useFieldActions()
+const { isAdmin } = useRole()
 
 const menu = ref(false)
 
@@ -43,7 +44,17 @@ const dateItems = [
   { label: 'Сегодня, год', format: 'year' },
 ] as const
 
-const ALLOWED_FORMATS = ['image/png', 'image/jpeg', 'image/svg+xml']
+const ALLOWED_FORMATS = computed(() =>
+  isAdmin.value
+    ? ['image/png', 'image/jpeg', 'image/svg+xml']
+    : ['image/png', 'image/jpeg']
+)
+
+const acceptAttr = computed(() =>
+  isAdmin.value
+    ? 'image/png,image/jpeg,image/jpg,image/svg+xml'
+    : 'image/png,image/jpeg,image/jpg'
+)
 const MAX_IMAGE_BYTES = 256 * 1024
 
 function toBase64(file: File): Promise<string> {
@@ -80,8 +91,12 @@ async function handleFileSelect(e: Event) {
 
   const format = file.type === 'image/jpg' ? 'image/jpeg' : file.type
 
-  if (!ALLOWED_FORMATS.includes(format)) {
-    toast.error('Недопустимый формат. Разрешены: PNG, JPEG, SVG')
+  if (!ALLOWED_FORMATS.value.includes(format)) {
+    toast.error(
+      isAdmin.value
+        ? 'Недопустимый формат. Разрешены: PNG, JPEG, SVG'
+        : 'Недопустимый формат. Разрешены: PNG, JPG'
+    )
     return
   }
 
@@ -155,7 +170,7 @@ async function handleFileSelect(e: Event) {
         <template #title>Вставить фото</template>
         <input
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+          :accept="acceptAttr"
           style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;"
           @change="handleFileSelect"
         />
