@@ -11,7 +11,9 @@ export const useDocumentUpdate = () => {
     loading.value = true
     try {
       const blob = await api.update(file, values, name, format)
-      await saveBlob(blob, `${name ?? 'document'}.${format}`, format)
+      const filename = `${name ?? 'document'}.${format}`
+      await saveBlob(blob, filename, format)
+      toast.success(`Документ "${filename}" создан`)
       return true
     } catch (error: any) {
       const blob: Blob | undefined = error?.data
