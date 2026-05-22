@@ -49,7 +49,10 @@ const namePattern = ref(props.externalDocName ?? '')
 
 const simpleCategories = computed(() =>
   Object.fromEntries(
-    Object.entries(state.value.data).filter(([cat]) => !cat.endsWith('[]'))
+    Object.entries(state.value.data)
+      .filter(([cat]) => !cat.endsWith('[]'))
+      .sort(([a], [b]) => a.localeCompare(b, 'ru'))
+      .map(([cat, vars]) => [cat, [...vars].sort((a, b) => a.localeCompare(b, 'ru'))])
   )
 )
 
@@ -58,6 +61,20 @@ const loopCategories = computed(() =>
     Object.entries(state.value.data).filter(([cat]) => cat.endsWith('[]'))
   )
 )
+
+const simpleTextFields = computed(() => {
+  const result: Array<{ key: string; label: string; value: string }> = []
+  for (const [cat, vars] of Object.entries(simpleCategories.value)) {
+    for (const variable of vars) {
+      const key = `${cat}.${variable}`
+      const val = values.value[key]
+      if (typeof val === 'string') {
+        result.push({ key, label: variable, value: val })
+      }
+    }
+  }
+  return result
+})
 
 onMounted(async () => {
   if (props.externalData) {
@@ -306,6 +323,8 @@ const {
                 <TemplatesFieldActionMenu
                   :model-value="(values[`${category}.${variable}`] as string) ?? ''"
                   :current-image-bytes="currentImageBytes"
+                  :field-key="`${String(category)}.${variable}`"
+                  :source-fields="simpleTextFields.filter(f => f.key !== `${String(category)}.${variable}`)"
                   @update:model-value="values[`${category}.${variable}`] = $event"
                   @set-image-name="imageNames[`${String(category)}.${variable}`] = $event"
                 />
@@ -396,6 +415,8 @@ const {
                         <TemplatesFieldActionMenu
                           :model-value="(row[variable] as string) ?? ''"
                           :current-image-bytes="currentImageBytes"
+                          :field-key="`${String(category)}.${rowIndex}.${variable}`"
+                          :source-fields="simpleTextFields"
                           @update:model-value="row[variable] = $event"
                           @set-image-name="imageNames[`${String(category)}.${rowIndex}.${variable}`] = $event"
                         />
