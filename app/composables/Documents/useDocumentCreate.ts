@@ -18,7 +18,11 @@ export const useDocumentCreate = () => {
     try {
       const blob = await api.create(templateId, values, name, format, namePattern)
       const filename = `${name ?? 'document'}.${format}`
-      await saveBlob(blob, filename, format)
+      const saved = await saveBlob(blob, filename, format)
+      if (!saved) {
+        toast.info('Отмена')
+        return false
+      }
       toast.success(`Документ "${filename}" создан`)
       return true
     } catch (error: any) {

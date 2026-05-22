@@ -12,7 +12,11 @@ export const useDocumentUpdate = () => {
     try {
       const blob = await api.update(file, values, name, format)
       const filename = `${name ?? 'document'}.${format}`
-      await saveBlob(blob, filename, format)
+      const saved = await saveBlob(blob, filename, format)
+      if (!saved) {
+        toast.info('Отмена')
+        return false
+      }
       toast.success(`Документ "${filename}" создан`)
       return true
     } catch (error: any) {

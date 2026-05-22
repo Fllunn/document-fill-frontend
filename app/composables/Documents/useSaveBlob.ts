@@ -4,19 +4,23 @@ const MIME: Record<string, string> = {
 }
 
 export const useSaveBlob = () => {
-  async function saveBlob(blob: Blob, filename: string, format: string): Promise<void> {
+  async function saveBlob(blob: Blob, filename: string, format: string): Promise<boolean> {
     const picker = (window as any).showSaveFilePicker
 
     if (typeof picker === 'function') {
-      const handle = await picker({
-        suggestedName: filename,
-        types: [{ description: filename, accept: { [MIME[format] ?? 'application/octet-stream']: [`.${format}`] } }],
-      })
-      
-      const writable = await handle.createWritable()
-      await writable.write(blob)
-      await writable.close()
-      return
+      try {
+        const handle = await picker({
+          suggestedName: filename,
+          types: [{ description: filename, accept: { [MIME[format] ?? 'application/octet-stream']: [`.${format}`] } }],
+        })
+        const writable = await handle.createWritable()
+        await writable.write(blob)
+        await writable.close()
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return false
+        throw e
+      }
+      return true
     }
 
     const url = URL.createObjectURL(blob)
@@ -27,6 +31,7 @@ export const useSaveBlob = () => {
     a.click()
     document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(url), 100)
+    return true
   }
 
   return { saveBlob }
