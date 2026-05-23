@@ -5,6 +5,7 @@ import { useTemplateNames } from '~/composables/Templates/useTemplateNames'
 import { useDocumentCreate } from '~/composables/Documents/useDocumentCreate'
 import { useDocumentUpdate } from '~/composables/Documents/useDocumentUpdate'
 import { useFieldNavigation } from '~/composables/Templates/useFieldNavigation'
+import { useFormulaEval } from '~/composables/Templates/useFormulaEval'
 import type { VariablesState } from '~/types/state/template.interface'
 import type { ImageValue } from '~/types/image.interface'
 import { isImageValue } from '~/types/image.interface'
@@ -186,11 +187,19 @@ function buildValues(): Record<string, any> {
   const result: Record<string, any> = {}
 
   for (const [key, value] of Object.entries(values.value)) {
-    result[key.startsWith('Разное.') ? key.slice(7) : key] = value
+    const resolved = typeof value === 'string' ? resolveFormula(value) : value
+    result[key.startsWith('Разное.') ? key.slice(7) : key] = resolved
   }
 
   for (const [category, rows] of Object.entries(loopValues.value)) {
-    result[category.slice(0, -2)] = rows
+    result[category.slice(0, -2)] = rows.map(row =>
+      Object.fromEntries(
+        Object.entries(row).map(([k, v]) => [
+          k,
+          typeof v === 'string' ? resolveFormula(v) : v,
+        ])
+      )
+    )
   }
 
   return result
@@ -321,6 +330,14 @@ const {
   onLoopArrowUp,
   onLoopArrowDown,
 } = useFieldNavigation(simpleCategories, loopCategories, loopValues, addRow)
+
+const { isFormula, evalFormula, resolveFormula } = useFormulaEval(loopValues)
+
+function formulaHint(val: string | ImageValue | undefined): string | undefined {
+  if (!isFormula(val)) return undefined
+  const { value, error } = evalFormula(val)
+  return error ? `Ошибка: ${error}` : `Значение: ${value}`
+}
 </script>
 
 <template>
@@ -371,6 +388,7 @@ const {
               :label="variable"
               :autofocus="false"
               :maxlength="isAdmin ? undefined : VALUE_STRING_MAX_LENGTH"
+              :hint="formulaHint(values[`${String(category)}.${variable}`])"
               @update:model-value="values[`${category}.${variable}`] = $event"
               @enter="onSimpleEnter(String(category), variable)"
               @arrow-left="onArrowLeft(`${String(category)}.${variable}`)"
@@ -464,6 +482,7 @@ const {
                       :label="variable"
                       :autofocus="false"
                       :maxlength="isAdmin ? undefined : VALUE_STRING_MAX_LENGTH"
+                      :hint="formulaHint(row[variable])"
                       @update:model-value="row[variable] = $event"
                       @enter="onLoopEnter(String(category), rowIndex, variable)"
                       @arrow-left="onArrowLeft(`${String(category)}.${rowIndex}.${variable}`)"

@@ -7,6 +7,7 @@ type Props = {
   type?: string
   prependInnerIcon?: string
   maxlength?: number
+  hint?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -103,6 +104,8 @@ defineExpose({
     :placeholder="placeholder"
     :type="type"
     :prepend-inner-icon="prependInnerIcon"
+    :hint="hint"
+    :persistent-hint="!!hint"
     variant="outlined"
     class="mb-2"
     @update:model-value="handleInput"
