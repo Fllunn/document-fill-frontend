@@ -192,7 +192,7 @@ function buildValues(): Record<string, any> {
   }
 
   for (const [category, rows] of Object.entries(loopValues.value)) {
-    result[category.slice(0, -2)] = rows.map(row =>
+    result[category] = rows.map(row =>
       Object.fromEntries(
         Object.entries(row).map(([k, v]) => [
           k,
@@ -203,6 +203,37 @@ function buildValues(): Record<string, any> {
   }
 
   return result
+}
+
+function buildRawValues(): Record<string, any> | undefined {
+  const result: Record<string, any> = {}
+  let hasFormulas = false
+
+  for (const [key, value] of Object.entries(values.value)) {
+    if (typeof value === 'string' && isFormula(value)) {
+      result[key.startsWith('Разное.') ? key.slice(7) : key] = value
+      hasFormulas = true
+    }
+  }
+
+  for (const [category, rows] of Object.entries(loopValues.value)) {
+    const rawRows: Record<string, string>[] = []
+    let tableHasFormulas = false
+    for (const row of rows) {
+      const rawRow: Record<string, string> = {}
+      for (const [k, v] of Object.entries(row)) {
+        if (typeof v === 'string' && isFormula(v)) {
+          rawRow[k] = v
+          tableHasFormulas = true
+          hasFormulas = true
+        }
+      }
+      rawRows.push(rawRow)
+    }
+    if (tableHasFormulas) result[category] = rawRows
+  }
+
+  return hasFormulas ? result : undefined
 }
 
 function buildFlatValues(): Record<string, string> {
@@ -306,10 +337,12 @@ async function generate(format: 'docx' | 'pdf') {
 
   activeFormat.value = format
 
+  const rawValues = buildRawValues()
+
   if (props.file) {
-    await update(props.file, buildValues(), resolvedName, format)
+    await update(props.file, buildValues(), rawValues, resolvedName, format)
   } else {
-    const success = await create(props.templateId!, buildValues(), resolvedName, format, patternToSend)
+    const success = await create(props.templateId!, buildValues(), rawValues, resolvedName, format, patternToSend)
     if (success && props.templateId) {
       await loadPatterns(props.templateId)
     }
@@ -331,7 +364,7 @@ const {
   onLoopArrowDown,
 } = useFieldNavigation(simpleCategories, loopCategories, loopValues, addRow)
 
-const { isFormula, evalFormula, resolveFormula } = useFormulaEval(loopValues)
+const { isFormula, evalFormula, resolveFormula } = useFormulaEval(loopValues, values)
 
 function formulaHint(val: string | ImageValue | undefined): string | undefined {
   if (!isFormula(val)) return undefined

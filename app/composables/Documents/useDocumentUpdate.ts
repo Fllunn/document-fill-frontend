@@ -7,10 +7,16 @@ export const useDocumentUpdate = () => {
   const { saveBlob } = useSaveBlob()
   const loading = ref(false)
 
-  async function update(file: File, values: Record<string, any>, name?: string, format: 'docx' | 'pdf' = 'docx'): Promise<boolean> {
+  async function update(
+    file: File,
+    values: Record<string, any>,
+    rawValues: Record<string, any> | undefined,
+    name?: string,
+    format: 'docx' | 'pdf' = 'docx',
+  ): Promise<boolean> {
     loading.value = true
     try {
-      const blob = await api.update(file, values, name, format)
+      const blob = await api.update(file, values, rawValues, name, format)
       const filename = `${name ?? 'document'}.${format}`
       const saved = await saveBlob(blob, filename, format)
       if (!saved) {
@@ -27,7 +33,7 @@ export const useDocumentUpdate = () => {
       const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? '')
 
       toast.error(msg || 'Ошибка при обновлении документа')
-      
+
       return false
     } finally {
       loading.value = false
