@@ -8,6 +8,13 @@ import { useFieldNavigation } from '~/composables/Templates/useFieldNavigation'
 import type { VariablesState } from '~/types/state/template.interface'
 import type { ImageValue } from '~/types/image.interface'
 import { isImageValue } from '~/types/image.interface'
+import {
+  TABLE_ROWS_LIMIT,
+  TABLE_COUNT_LIMIT,
+  TOTAL_VALUES_MAX_LENGTH,
+  VALUE_STRING_MAX_LENGTH,
+  DOCUMENT_NAME_MAX_LENGTH,
+} from '~/constants/app.constants'
 
 type Props = {
   templateId?: string
@@ -20,6 +27,8 @@ type Props = {
 
 const props = defineProps<Props>()
 
+const { isAdmin } = useRole()
+const { documentNameRule } = useValidationRules()
 const { state, getVariables } = useVariablesTemplate()
 const { patterns: savedPatterns, load: loadPatterns, remove: removePattern } = useTemplateNames()
 const { loading: creating, create } = useDocumentCreate()
@@ -46,6 +55,7 @@ const values = ref<Record<string, string | ImageValue>>({})
 const loopValues = ref<Record<string, Record<string, string | ImageValue>[]>>({})
 const imageNames = ref<Record<string, string>>({})
 const namePattern = ref(props.externalDocName ?? '')
+const namePatternCombobox = ref()
 
 const simpleCategories = computed(() =>
   Object.fromEntries(
@@ -116,13 +126,31 @@ onMounted(async () => {
   if (props.templateId) {
     await loadPatterns(props.templateId)
   }
+
 })
 
 watch(() => props.externalDocName, (val) => {
   if (val !== undefined) namePattern.value = val
 })
 
+watch(namePattern, (val) => {
+  if (val && val.length > DOCUMENT_NAME_MAX_LENGTH)
+    namePattern.value = val.slice(0, DOCUMENT_NAME_MAX_LENGTH)
+})
+
+watch(namePatternCombobox, (combobox) => {
+  if (!combobox) return
+  nextTick(() => {
+    const input = combobox.$el?.querySelector('input')
+    if (input) input.maxLength = DOCUMENT_NAME_MAX_LENGTH
+  })
+})
+
 function addRow(category: string) {
+  if (!isAdmin.value && (loopValues.value[category] ?? []).length >= TABLE_ROWS_LIMIT) {
+    toast.error(`Максимум ${TABLE_ROWS_LIMIT} строк в таблице`)
+    return
+  }
   const vars = state.value.data[category] ?? []
   loopValues.value[category]!.push(Object.fromEntries(vars.map(v => [v, ''])))
 }
@@ -233,9 +261,39 @@ async function generate(format: 'docx' | 'pdf') {
     return
   }
 
-  const resolvedName = pattern ? resolvePattern(pattern, flat) : undefined
+  const resolvedName = pattern ? resolvePattern(pattern, flat).slice(0, DOCUMENT_NAME_MAX_LENGTH) : undefined
   const hasVariables = /\{[^}]+\}/.test(pattern)
   const patternToSend = pattern && hasVariables ? pattern : undefined
+
+  if (!isAdmin.value) {
+    if (Object.keys(loopValues.value).length > TABLE_COUNT_LIMIT) {
+      toast.error(`Максимум ${TABLE_COUNT_LIMIT} таблиц`)
+      return
+    }
+
+    for (const [cat, rows] of Object.entries(loopValues.value)) {
+      if (rows.length > TABLE_ROWS_LIMIT) {
+        toast.error(`Таблица "${cat.slice(0, -2)}": максимум ${TABLE_ROWS_LIMIT} строк`)
+        return
+      }
+    }
+
+    let totalChars = 0
+    for (const val of Object.values(values.value)) {
+      if (typeof val === 'string') totalChars += val.length
+    }
+    for (const rows of Object.values(loopValues.value)) {
+      for (const row of rows) {
+        for (const val of Object.values(row)) {
+          if (typeof val === 'string') totalChars += val.length
+        }
+      }
+    }
+    if (totalChars > TOTAL_VALUES_MAX_LENGTH) {
+      toast.error(`Слишком много данных для генерации документа. Пожалуйста, попробуйте уменьшить длину текстовых значений или количество изображений`)
+      return
+    }
+  }
 
   activeFormat.value = format
 
@@ -312,6 +370,7 @@ const {
               :model-value="(values[`${category}.${variable}`] as string) ?? ''"
               :label="variable"
               :autofocus="false"
+              :maxlength="isAdmin ? undefined : VALUE_STRING_MAX_LENGTH"
               @update:model-value="values[`${category}.${variable}`] = $event"
               @enter="onSimpleEnter(String(category), variable)"
               @arrow-left="onArrowLeft(`${String(category)}.${variable}`)"
@@ -404,6 +463,7 @@ const {
                       :model-value="(row[variable] as string) ?? ''"
                       :label="variable"
                       :autofocus="false"
+                      :maxlength="isAdmin ? undefined : VALUE_STRING_MAX_LENGTH"
                       @update:model-value="row[variable] = $event"
                       @enter="onLoopEnter(String(category), rowIndex, variable)"
                       @arrow-left="onArrowLeft(`${String(category)}.${rowIndex}.${variable}`)"
@@ -447,11 +507,13 @@ const {
             </span>
           <v-col cols="12">
             <v-combobox
+              ref="namePatternCombobox"
               v-model="namePattern"
               :items="savedPatterns"
+              :rules="[documentNameRule]"
               label="Название документа"
               variant="outlined"
-              hide-details
+              hide-details="auto"
               clearable
             >
               <template #item="{ item, props: itemProps }">

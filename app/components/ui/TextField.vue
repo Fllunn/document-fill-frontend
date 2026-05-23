@@ -6,9 +6,10 @@ type Props = {
   placeholder?: string
   type?: string
   prependInnerIcon?: string
+  maxlength?: number
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   errorMessages: '',
   placeholder: '',
   type: 'text',
@@ -26,8 +27,35 @@ const emit = defineEmits<{
 
 const textField = ref()
 
+const limitError = computed(() =>
+  props.maxlength && props.modelValue.length >= props.maxlength
+    ? `Нельзя ввести больше ${props.maxlength} символов`
+    : ''
+)
+
+const displayErrors = computed(() => limitError.value || props.errorMessages)
+
 function getInputEl(): HTMLInputElement | null {
   return textField.value?.$el?.querySelector('input') ?? null
+}
+
+function applyMaxlength() {
+  const input = getInputEl()
+  if (input && props.maxlength) {
+    input.maxLength = props.maxlength
+  }
+}
+
+onMounted(applyMaxlength)
+
+watch(() => props.maxlength, applyMaxlength)
+
+function handleInput(val: string) {
+  if (props.maxlength && val.length > props.maxlength) {
+    emit('update:modelValue', val.slice(0, props.maxlength))
+  } else {
+    emit('update:modelValue', val)
+  }
 }
 
 function handleArrowLeft(event: KeyboardEvent) {
@@ -70,14 +98,14 @@ defineExpose({
   <v-text-field
     ref="textField"
     :model-value="modelValue"
-    :error-messages="errorMessages"
+    :error-messages="displayErrors"
     :label="label"
     :placeholder="placeholder"
     :type="type"
     :prepend-inner-icon="prependInnerIcon"
     variant="outlined"
     class="mb-2"
-    @update:model-value="emit('update:modelValue', $event)"
+    @update:model-value="handleInput"
     @keydown.enter.prevent="emit('enter')"
     @keydown.left="handleArrowLeft"
     @keydown.right="handleArrowRight"

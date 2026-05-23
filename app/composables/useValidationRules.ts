@@ -1,4 +1,5 @@
 import isEmail from 'validator/lib/isEmail'
+import { VALUE_STRING_MAX_LENGTH, DOCUMENT_NAME_MAX_LENGTH } from '~/constants/app.constants'
 
 export const useValidationRules = () => {
   const emailRule = (value: string) => {
@@ -43,11 +44,29 @@ export const useValidationRules = () => {
     return true
   }
 
+  const valueStringRule = (value: string) => {
+    if (value.length > VALUE_STRING_MAX_LENGTH)
+      return `Значение не должно превышать ${VALUE_STRING_MAX_LENGTH} символов`
+
+    return true
+  }
+
+  const documentNameRule = (value: string) => {
+    if (!value) return true
+
+    if (value.length >= DOCUMENT_NAME_MAX_LENGTH)
+      return `Название не должно превышать ${DOCUMENT_NAME_MAX_LENGTH} символов`
+
+    return true
+  }
+
   return {
     emailRule,
     passwordRule,
     nameRule,
     agreementRule,
     deleteUserRule,
+    valueStringRule,
+    documentNameRule,
   }
 }

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { toast } from 'vue3-toastify'
 import { useDocumentExtract } from '~/composables/Documents/useDocumentExtract'
+import { DOCUMENT_FILE_MAX_BYTES } from '~/constants/app.constants'
 
 definePageMeta({ middleware: 'auth' })
 
 const { loading: extracting, extract, variables, initialValues, initialLoopValues, docName } = useDocumentExtract()
 const { isAdmin } = useRole()
-
-const MAX_SIZE = 1 * 1024 * 1024
 
 const file = ref<File | null>(null)
 const extracted = ref(false)
@@ -20,8 +19,8 @@ function setFile(picked: File | undefined) {
   if (!picked?.name.endsWith('.docx'))
     return toast('Разрешены только файлы .docx', { type: 'error' })
 
-  if (!isAdmin.value && picked.size > MAX_SIZE)
-    return toast(`Размер файла не должен превышать ${MAX_SIZE / (1024 * 1024)} МБ`, { type: 'error' })
+  if (!isAdmin.value && picked.size > DOCUMENT_FILE_MAX_BYTES)
+    return toast(`Размер файла не должен превышать ${DOCUMENT_FILE_MAX_BYTES / (1024 * 1024)} МБ`, { type: 'error' })
 
   file.value = picked
   extracted.value = false

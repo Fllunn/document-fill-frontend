@@ -2,6 +2,7 @@
 import { toast } from 'vue3-toastify'
 import { useFieldActions } from '~/composables/Templates/useFieldActions'
 import type { ImageValue } from '~/types/image.interface'
+import { IMAGE_SINGLE_MAX_BYTES, IMAGE_TOTAL_MAX_BYTES } from '~/constants/app.constants'
 
 type SourceField = {
   key: string
@@ -86,7 +87,6 @@ const acceptAttr = computed(() =>
     ? 'image/png,image/jpeg,image/jpg,image/svg+xml'
     : 'image/png,image/jpeg,image/jpg'
 )
-const MAX_IMAGE_BYTES = 256 * 1024
 
 function toBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -131,14 +131,14 @@ async function handleFileSelect(e: Event) {
     return
   }
 
-  if (file.size > MAX_IMAGE_BYTES) {
-    toast.error('Размер изображения превышает 256 КБ')
+  if (file.size > IMAGE_SINGLE_MAX_BYTES) {
+    toast.error(`Размер изображения превышает ${IMAGE_SINGLE_MAX_BYTES / 1024} КБ`)
     return
   }
 
   const existingBytes = props.currentImageBytes ?? 0
-  if (existingBytes + file.size > 1024 * 1024) {
-    toast.error('Суммарный размер всех изображений должен быть меньше 1 МБ')
+  if (existingBytes + file.size > IMAGE_TOTAL_MAX_BYTES) {
+    toast.error(`Суммарный размер всех изображений должен быть меньше ${IMAGE_TOTAL_MAX_BYTES / (1024 * 1024)} МБ`)
     return
   }
 

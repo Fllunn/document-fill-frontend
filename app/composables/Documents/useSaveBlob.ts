@@ -3,6 +3,11 @@ const MIME: Record<string, string> = {
   pdf: 'application/pdf',
 }
 
+const DESCRIPTIONS: Record<string, string> = {
+  docx: 'Документ Word',
+  pdf: 'PDF документ',
+}
+
 export const useSaveBlob = () => {
   async function saveBlob(blob: Blob, filename: string, format: string): Promise<boolean> {
     const picker = (window as any).showSaveFilePicker
@@ -11,7 +16,7 @@ export const useSaveBlob = () => {
       try {
         const handle = await picker({
           suggestedName: filename,
-          types: [{ description: filename, accept: { [MIME[format] ?? 'application/octet-stream']: [`.${format}`] } }],
+          types: [{ description: DESCRIPTIONS[format] ?? 'Файл', accept: { [MIME[format] ?? 'application/octet-stream']: [`.${format}`] } }],
         })
         const writable = await handle.createWritable()
         await writable.write(blob)
