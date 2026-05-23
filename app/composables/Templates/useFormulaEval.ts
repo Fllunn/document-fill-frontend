@@ -93,6 +93,8 @@ export function useFormulaEval(
   loopValues: Ref<Record<string, Record<string, string | ImageValue>[]>>,
   values: Ref<Record<string, string | ImageValue>>
 ) {
+  const resolvingFields = new Set<string>()
+
   function isFormula(val: string | ImageValue | undefined): val is string {
     return typeof val === 'string' && FORMULA_RE.test(val.trim())
   }
@@ -101,10 +103,25 @@ export function useFormulaEval(
     const inner = ref.match(/^\{([^}]+)\}$/)
     if (!inner) return null
     const path = inner[1]!.trim()
+
     const direct = values.value[path]
-    if (typeof direct === 'string') return direct
-    const withRazno = values.value[`Разное.${path}`]
-    return typeof withRazno === 'string' ? withRazno : null
+    
+    const raw = typeof direct === 'string'
+      ? direct
+      : (typeof values.value[`Разное.${path}`] === 'string' ? values.value[`Разное.${path}`] as string : null)
+
+    if (raw === null) return null
+
+    if (FORMULA_RE.test(raw.trim())) {
+      if (resolvingFields.has(path)) return null
+      resolvingFields.add(path)
+      const result = evalFormula(raw)
+      resolvingFields.delete(path)
+      if (result.error) return null
+      return String(result.value)
+    }
+
+    return raw
   }
 
   function resolveNumericArg(token: string): { nums: number[]; error: string | null } {
