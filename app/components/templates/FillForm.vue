@@ -5,9 +5,17 @@ import { useTemplateNames } from '~/composables/Templates/useTemplateNames'
 import { useDocumentCreate } from '~/composables/Documents/useDocumentCreate'
 import { useDocumentUpdate } from '~/composables/Documents/useDocumentUpdate'
 import { useFieldNavigation } from '~/composables/Templates/useFieldNavigation'
+import { useFormulaEval } from '~/composables/Templates/useFormulaEval'
 import type { VariablesState } from '~/types/state/template.interface'
 import type { ImageValue } from '~/types/image.interface'
 import { isImageValue } from '~/types/image.interface'
+import {
+  TABLE_ROWS_LIMIT,
+  TABLE_COUNT_LIMIT,
+  TOTAL_VALUES_MAX_LENGTH,
+  VALUE_STRING_MAX_LENGTH,
+  DOCUMENT_NAME_MAX_LENGTH,
+} from '~/constants/app.constants'
 
 type Props = {
   templateId?: string
@@ -20,6 +28,8 @@ type Props = {
 
 const props = defineProps<Props>()
 
+const { isAdmin } = useRole()
+const { documentNameRule } = useValidationRules()
 const { state, getVariables } = useVariablesTemplate()
 const { patterns: savedPatterns, load: loadPatterns, remove: removePattern } = useTemplateNames()
 const { loading: creating, create } = useDocumentCreate()
@@ -46,10 +56,14 @@ const values = ref<Record<string, string | ImageValue>>({})
 const loopValues = ref<Record<string, Record<string, string | ImageValue>[]>>({})
 const imageNames = ref<Record<string, string>>({})
 const namePattern = ref(props.externalDocName ?? '')
+const namePatternCombobox = ref()
 
 const simpleCategories = computed(() =>
   Object.fromEntries(
-    Object.entries(state.value.data).filter(([cat]) => !cat.endsWith('[]'))
+    Object.entries(state.value.data)
+      .filter(([cat]) => !cat.endsWith('[]'))
+      .sort(([a], [b]) => a.localeCompare(b, 'ru'))
+      .map(([cat, vars]) => [cat, [...vars].sort((a, b) => a.localeCompare(b, 'ru'))])
   )
 )
 
@@ -58,6 +72,20 @@ const loopCategories = computed(() =>
     Object.entries(state.value.data).filter(([cat]) => cat.endsWith('[]'))
   )
 )
+
+const simpleTextFields = computed(() => {
+  const result: Array<{ key: string; label: string; value: string }> = []
+  for (const [cat, vars] of Object.entries(simpleCategories.value)) {
+    for (const variable of vars) {
+      const key = `${cat}.${variable}`
+      const val = values.value[key]
+      if (typeof val === 'string') {
+        result.push({ key, label: variable, value: val })
+      }
+    }
+  }
+  return result
+})
 
 onMounted(async () => {
   if (props.externalData) {
@@ -99,13 +127,31 @@ onMounted(async () => {
   if (props.templateId) {
     await loadPatterns(props.templateId)
   }
+
 })
 
 watch(() => props.externalDocName, (val) => {
   if (val !== undefined) namePattern.value = val
 })
 
+watch(namePattern, (val) => {
+  if (val && val.length > DOCUMENT_NAME_MAX_LENGTH)
+    namePattern.value = val.slice(0, DOCUMENT_NAME_MAX_LENGTH)
+})
+
+watch(namePatternCombobox, (combobox) => {
+  if (!combobox) return
+  nextTick(() => {
+    const input = combobox.$el?.querySelector('input')
+    if (input) input.maxLength = DOCUMENT_NAME_MAX_LENGTH
+  })
+})
+
 function addRow(category: string) {
+  if (!isAdmin.value && (loopValues.value[category] ?? []).length >= TABLE_ROWS_LIMIT) {
+    toast.error(`Максимум ${TABLE_ROWS_LIMIT} строк в таблице`)
+    return
+  }
   const vars = state.value.data[category] ?? []
   loopValues.value[category]!.push(Object.fromEntries(vars.map(v => [v, ''])))
 }
@@ -141,14 +187,53 @@ function buildValues(): Record<string, any> {
   const result: Record<string, any> = {}
 
   for (const [key, value] of Object.entries(values.value)) {
-    result[key.startsWith('Разное.') ? key.slice(7) : key] = value
+    const resolved = typeof value === 'string' ? resolveFormula(value) : value
+    result[key.startsWith('Разное.') ? key.slice(7) : key] = resolved
   }
 
   for (const [category, rows] of Object.entries(loopValues.value)) {
-    result[category.slice(0, -2)] = rows
+    result[category] = rows.map(row =>
+      Object.fromEntries(
+        Object.entries(row).map(([k, v]) => [
+          k,
+          typeof v === 'string' ? resolveFormula(v) : v,
+        ])
+      )
+    )
   }
 
   return result
+}
+
+function buildRawValues(): Record<string, any> | undefined {
+  const result: Record<string, any> = {}
+  let hasFormulas = false
+
+  for (const [key, value] of Object.entries(values.value)) {
+    if (typeof value === 'string' && isFormula(value)) {
+      result[key.startsWith('Разное.') ? key.slice(7) : key] = value
+      hasFormulas = true
+    }
+  }
+
+  for (const [category, rows] of Object.entries(loopValues.value)) {
+    const rawRows: Record<string, string>[] = []
+    let tableHasFormulas = false
+    for (const row of rows) {
+      const rawRow: Record<string, string> = {}
+      for (const [k, v] of Object.entries(row)) {
+        if (typeof v === 'string' && isFormula(v)) {
+          rawRow[k] = v
+          tableHasFormulas = true
+          hasFormulas = true
+        }
+      }
+      rawRows.push(rawRow)
+    }
+    if (tableHasFormulas) result[category] = rawRows
+  }
+
+  return hasFormulas ? result : undefined
 }
 
 function buildFlatValues(): Record<string, string> {
@@ -216,16 +301,48 @@ async function generate(format: 'docx' | 'pdf') {
     return
   }
 
-  const resolvedName = pattern ? resolvePattern(pattern, flat) : undefined
+  const resolvedName = pattern ? resolvePattern(pattern, flat).slice(0, DOCUMENT_NAME_MAX_LENGTH) : undefined
   const hasVariables = /\{[^}]+\}/.test(pattern)
   const patternToSend = pattern && hasVariables ? pattern : undefined
 
+  if (!isAdmin.value) {
+    if (Object.keys(loopValues.value).length > TABLE_COUNT_LIMIT) {
+      toast.error(`Максимум ${TABLE_COUNT_LIMIT} таблиц`)
+      return
+    }
+
+    for (const [cat, rows] of Object.entries(loopValues.value)) {
+      if (rows.length > TABLE_ROWS_LIMIT) {
+        toast.error(`Таблица "${cat.slice(0, -2)}": максимум ${TABLE_ROWS_LIMIT} строк`)
+        return
+      }
+    }
+
+    let totalChars = 0
+    for (const val of Object.values(values.value)) {
+      if (typeof val === 'string') totalChars += val.length
+    }
+    for (const rows of Object.values(loopValues.value)) {
+      for (const row of rows) {
+        for (const val of Object.values(row)) {
+          if (typeof val === 'string') totalChars += val.length
+        }
+      }
+    }
+    if (totalChars > TOTAL_VALUES_MAX_LENGTH) {
+      toast.error(`Слишком много данных для генерации документа. Пожалуйста, попробуйте уменьшить длину текстовых значений или количество изображений`)
+      return
+    }
+  }
+
   activeFormat.value = format
 
+  const rawValues = buildRawValues()
+
   if (props.file) {
-    await update(props.file, buildValues(), resolvedName, format)
+    await update(props.file, buildValues(), rawValues, resolvedName, format)
   } else {
-    const success = await create(props.templateId!, buildValues(), resolvedName, format, patternToSend)
+    const success = await create(props.templateId!, buildValues(), rawValues, resolvedName, format, patternToSend)
     if (success && props.templateId) {
       await loadPatterns(props.templateId)
     }
@@ -246,6 +363,14 @@ const {
   onLoopArrowUp,
   onLoopArrowDown,
 } = useFieldNavigation(simpleCategories, loopCategories, loopValues, addRow)
+
+const { isFormula, evalFormula, resolveFormula } = useFormulaEval(loopValues, values)
+
+function formulaHint(val: string | ImageValue | undefined): string | undefined {
+  if (!isFormula(val)) return undefined
+  const { value, error } = evalFormula(val)
+  return error ? `Ошибка: ${error}` : `Значение: ${value}`
+}
 </script>
 
 <template>
@@ -295,6 +420,8 @@ const {
               :model-value="(values[`${category}.${variable}`] as string) ?? ''"
               :label="variable"
               :autofocus="false"
+              :maxlength="isAdmin ? undefined : VALUE_STRING_MAX_LENGTH"
+              :hint="formulaHint(values[`${String(category)}.${variable}`])"
               @update:model-value="values[`${category}.${variable}`] = $event"
               @enter="onSimpleEnter(String(category), variable)"
               @arrow-left="onArrowLeft(`${String(category)}.${variable}`)"
@@ -306,6 +433,8 @@ const {
                 <TemplatesFieldActionMenu
                   :model-value="(values[`${category}.${variable}`] as string) ?? ''"
                   :current-image-bytes="currentImageBytes"
+                  :field-key="`${String(category)}.${variable}`"
+                  :source-fields="simpleTextFields.filter(f => f.key !== `${String(category)}.${variable}`)"
                   @update:model-value="values[`${category}.${variable}`] = $event"
                   @set-image-name="imageNames[`${String(category)}.${variable}`] = $event"
                 />
@@ -385,6 +514,8 @@ const {
                       :model-value="(row[variable] as string) ?? ''"
                       :label="variable"
                       :autofocus="false"
+                      :maxlength="isAdmin ? undefined : VALUE_STRING_MAX_LENGTH"
+                      :hint="formulaHint(row[variable])"
                       @update:model-value="row[variable] = $event"
                       @enter="onLoopEnter(String(category), rowIndex, variable)"
                       @arrow-left="onArrowLeft(`${String(category)}.${rowIndex}.${variable}`)"
@@ -396,6 +527,8 @@ const {
                         <TemplatesFieldActionMenu
                           :model-value="(row[variable] as string) ?? ''"
                           :current-image-bytes="currentImageBytes"
+                          :field-key="`${String(category)}.${rowIndex}.${variable}`"
+                          :source-fields="simpleTextFields"
                           @update:model-value="row[variable] = $event"
                           @set-image-name="imageNames[`${String(category)}.${rowIndex}.${variable}`] = $event"
                         />
@@ -426,11 +559,13 @@ const {
             </span>
           <v-col cols="12">
             <v-combobox
+              ref="namePatternCombobox"
               v-model="namePattern"
               :items="savedPatterns"
+              :rules="[documentNameRule]"
               label="Название документа"
               variant="outlined"
-              hide-details
+              hide-details="auto"
               clearable
             >
               <template #item="{ item, props: itemProps }">

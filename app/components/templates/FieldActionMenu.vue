@@ -2,10 +2,19 @@
 import { toast } from 'vue3-toastify'
 import { useFieldActions } from '~/composables/Templates/useFieldActions'
 import type { ImageValue } from '~/types/image.interface'
+import { IMAGE_SINGLE_MAX_BYTES, IMAGE_TOTAL_MAX_BYTES } from '~/constants/app.constants'
+
+type SourceField = {
+  key: string
+  label: string
+  value: string
+}
 
 type Props = {
   modelValue: string | ImageValue
   currentImageBytes?: number
+  fieldKey?: string
+  sourceFields?: SourceField[]
 }
 
 const props = defineProps<Props>()
@@ -18,6 +27,29 @@ const { declenseFio, numberToWords, insertDate } = useFieldActions()
 const { isAdmin } = useRole()
 
 const menu = ref(false)
+
+function commonPrefixLen(a: string, b: string): number {
+  let i = 0
+  while (i < a.length && i < b.length && a[i] === b[i]) i++
+  return i
+}
+
+const currentLabel = computed(() => props.fieldKey?.split('.').at(-1) ?? '')
+
+const sortedSourceFields = computed(() => {
+  if (!props.sourceFields?.length) return []
+  return [...props.sourceFields].sort((a, b) => {
+    const da = commonPrefixLen(currentLabel.value, a.label)
+    const db = commonPrefixLen(currentLabel.value, b.label)
+    if (db !== da) return db - da
+    return a.label.localeCompare(b.label, 'ru')
+  })
+})
+
+function copyFromField(field: SourceField) {
+  emit('update:modelValue', field.value)
+  menu.value = false
+}
 
 function apply(result: string | false, errorMessage: string) {
   if (result === false) {
@@ -55,7 +87,6 @@ const acceptAttr = computed(() =>
     ? 'image/png,image/jpeg,image/jpg,image/svg+xml'
     : 'image/png,image/jpeg,image/jpg'
 )
-const MAX_IMAGE_BYTES = 256 * 1024
 
 function toBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -100,14 +131,14 @@ async function handleFileSelect(e: Event) {
     return
   }
 
-  if (file.size > MAX_IMAGE_BYTES) {
-    toast.error('Размер изображения превышает 256 КБ')
+  if (file.size > IMAGE_SINGLE_MAX_BYTES) {
+    toast.error(`Размер изображения превышает ${IMAGE_SINGLE_MAX_BYTES / 1024} КБ`)
     return
   }
 
   const existingBytes = props.currentImageBytes ?? 0
-  if (existingBytes + file.size > 1024 * 1024) {
-    toast.error('Суммарный размер всех изображений должен быть меньше 1 МБ')
+  if (existingBytes + file.size > IMAGE_TOTAL_MAX_BYTES) {
+    toast.error(`Суммарный размер всех изображений должен быть меньше ${IMAGE_TOTAL_MAX_BYTES / (1024 * 1024)} МБ`)
     return
   }
 
@@ -175,6 +206,26 @@ async function handleFileSelect(e: Event) {
           @change="handleFileSelect"
         />
       </v-list-item>
+
+      <template v-if="sortedSourceFields.length">
+        <v-divider />
+        <v-list-group value="copy-from">
+          <template #activator="{ props: groupProps }">
+            <v-list-item v-bind="groupProps" prepend-icon="mdi-content-copy" title="Скопировать из поля" />
+          </template>
+
+          <div style="max-height: 200px; overflow-y: auto;">
+            <v-list-item
+              v-for="field in sortedSourceFields"
+              :key="field.key"
+              :title="field.label"
+              :subtitle="field.value || '—'"
+              class="pl-8"
+              @click="copyFromField(field)"
+            />
+          </div>
+        </v-list-group>
+      </template>
     </v-list>
   </v-menu>
 </template>

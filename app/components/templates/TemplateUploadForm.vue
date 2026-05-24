@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { toast } from 'vue3-toastify'
 import { useUploadTemplate } from '~/composables/Templates/useUploadTemplate'
+import { TEMPLATE_FILE_MAX_BYTES } from '~/constants/app.constants'
 
 const { state, loading, createFromFile } = useUploadTemplate()
 const { isAdmin } = useRole()
 
 const emit = defineEmits<{ uploaded: [] }>()
-
-const MAX_SIZE = 512 * 1024
 
 const file = ref<File | null>(null)
 const isSystem = ref(false)
@@ -20,8 +19,8 @@ function setFile(picked: File | undefined) {
   if (!picked?.name.endsWith('.docx'))
     return toast('Разрешены только файлы .docx', { type: 'error' })
 
-  if (!isAdmin.value && picked.size > MAX_SIZE)
-    return toast('Размер файла не должен превышать 512 КБ', { type: 'error' })
+  if (!isAdmin.value && picked.size > TEMPLATE_FILE_MAX_BYTES)
+    return toast(`Размер файла не должен превышать ${TEMPLATE_FILE_MAX_BYTES / 1024} КБ`, { type: 'error' })
 
   file.value = picked
 }

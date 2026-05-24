@@ -10,13 +10,14 @@ export const useDocumentCreate = () => {
   async function create(
     templateId: string,
     values: Record<string, any>,
+    rawValues: Record<string, any> | undefined,
     name?: string,
     format: 'docx' | 'pdf' = 'docx',
     namePattern?: string,
   ): Promise<boolean> {
     loading.value = true
     try {
-      const blob = await api.create(templateId, values, name, format, namePattern)
+      const blob = await api.create(templateId, values, rawValues, name, format, namePattern)
       const filename = `${name ?? 'document'}.${format}`
       const saved = await saveBlob(blob, filename, format)
       if (!saved) {
