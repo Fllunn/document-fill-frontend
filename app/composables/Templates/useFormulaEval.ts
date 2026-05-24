@@ -18,12 +18,17 @@ const CASE_MAP: Record<string, DeclensionCase> = {
 
 const NUMERIC_RE = /^-?\d+([.,]\d+)?$/
 
+const MONTH_GENITIVE = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+]
+
 const NUMERIC_FORMULA_HANDLERS: Record<string, (nums: number[]) => number> = {
   sum: nums => nums.reduce((a, b) => a + b, 0),
   avg: nums => (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0),
 }
 
-const STRING_FORMULA_NAMES = ['decline', 'money-text', 'today']
+const STRING_FORMULA_NAMES = ['decline', 'money-text', 'today', 'count-row', 'if', 'month-gen']
 
 const FORMULA_ALIASES: Record<string, string> = {
   сумм: 'sum',
@@ -31,6 +36,9 @@ const FORMULA_ALIASES: Record<string, string> = {
   склонить: 'decline',
   'сумма-прописью': 'money-text',
   сегодня: 'today',
+  'сумма-строк': 'count-row',
+  если: 'if',
+  'месяц-род': 'month-gen',
 }
 
 const FORMULA_RE = new RegExp(
@@ -87,6 +95,24 @@ function numberToWords(value: string): string | false {
   if (isNaN(num)) return false
 
   return convert(String(num))
+}
+
+function parseConditionOp(cond: string): { left: string; op: string; right: string } | null {
+  const ops = ['<=', '>=', '<>', '!=', '<', '>', '=']
+  let depth = 0
+
+  for (let i = 0; i < cond.length; i++) {
+    if (cond[i] === '(') depth++
+    else if (cond[i] === ')') depth--
+
+    else if (depth === 0) {
+      for (const op of ops) {
+        if (cond.slice(i, i + op.length) === op)
+          return { left: cond.slice(0, i).trim(), op, right: cond.slice(i + op.length).trim() }
+      }
+    }
+  }
+  return null
 }
 
 export function useFormulaEval(
@@ -237,8 +263,105 @@ export function useFormulaEval(
     const dd = String(d.getDate()).padStart(2, '0')
     const mm = String(d.getMonth() + 1).padStart(2, '0')
     const yyyy = String(d.getFullYear())
-    const result = format.replace(/yyyy/gi, yyyy).replace(/mm/gi, mm).replace(/dd/gi, dd)
+    let result = format.replace(/yyyy/gi, yyyy).replace(/mm/gi, mm).replace(/dd/gi, dd)
+    const fieldMatches = result.match(/\{[^}]+\}/g)
+
+    if (fieldMatches) {
+      for (const ref of fieldMatches) {
+        const val = resolveFieldRef(ref)
+        if (val === null) return { value: null, error: `поле «${ref}» не найдено` }
+        result = result.replace(ref, val)
+      }
+    }
     return { value: result, error: null }
+  }
+
+  function resolveConditionOperand(token: string): { val: string | number; error: null } | { val: null; error: string } {
+    const t = token.trim()
+
+    if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'")))
+      return { val: t.slice(1, -1), error: null }
+
+    if (/^\{[^}]+\}$/.test(t)) {
+      const v = resolveFieldRef(t)
+
+      if (v === null) return { val: null, error: `поле «${t}» не найдено` }
+
+      const n = parseFloat(v.replace(',', '.'))
+      return { val: isNaN(n) ? v : n, error: null }
+    }
+
+    if (isValidNumeric(t)) return { val: parseNumeric(t), error: null }
+    if (FORMULA_RE.test(t)) {
+      const r = evalFormula(t)
+
+      if (r.error) return { val: null, error: r.error }
+
+      const n = typeof r.value === 'number' ? r.value : parseFloat(String(r.value).replace(',', '.'))
+
+      return { val: isNaN(n) ? String(r.value) : n, error: null }
+    }
+    return { val: t, error: null }
+  }
+
+  function evalCountRow(rawArg: string): FormulaResult {
+    const table = rawArg.trim()
+    const rows = loopValues.value[table + '[]']
+
+    if (!rows) return { value: null, error: `таблица «${table}» не найдена` }
+
+    return { value: rows.length, error: null }
+  }
+
+  function evalIf(rawArg: string): FormulaResult {
+    const args = splitArgs(rawArg)
+    
+    if (args.length !== 3) return { value: null, error: 'если() требует 3 аргумента' }
+
+    const [condRaw, trueRaw, falseRaw] = args as [string, string, string]
+
+    const parsed = parseConditionOp(condRaw)
+
+    if (!parsed) return { value: null, error: 'неверное условие' }
+
+    const { left, op, right } = parsed
+    const lRes = resolveConditionOperand(left)
+    const rRes = resolveConditionOperand(right)
+
+    if (lRes.error) return { value: null, error: lRes.error }
+    if (rRes.error) return { value: null, error: rRes.error }
+
+    const lv = lRes.val
+    const rv = rRes.val
+    let condition: boolean
+
+    if (typeof lv === 'number' && typeof rv === 'number') {
+      if (op === '=') condition = lv === rv
+      else if (op === '!=' || op === '<>') condition = lv !== rv
+      else if (op === '<') condition = lv < rv
+      else if (op === '>') condition = lv > rv
+      else if (op === '<=') condition = lv <= rv
+      else if (op === '>=') condition = lv >= rv
+      else return { value: null, error: `неизвестный оператор «${op}»` }
+    } else {
+      const ls = String(lv)
+      const rs = String(rv)
+      if (op === '=') condition = ls === rs
+      else if (op === '!=' || op === '<>') condition = ls !== rs
+      else return { value: null, error: `оператор «${op}» не применим к строкам` }
+    }
+
+    const resOp = resolveConditionOperand(condition ? trueRaw : falseRaw)
+    if (resOp.val === null) return { value: null, error: resOp.error }
+    return { value: resOp.val, error: null }
+  }
+
+  function evalMonthGen(rawArg: string): FormulaResult {
+    const resolved = resolveConditionOperand(rawArg.trim())
+    if (resolved.val === null) return { value: null, error: resolved.error }
+    const n = parseInt(String(resolved.val), 10)
+    if (isNaN(n) || n < 1 || n > 12) return { value: null, error: `неверный номер месяца «${rawArg.trim()}»` }
+    return { value: MONTH_GENITIVE[n - 1]!, error: null }
   }
 
   function evalFormula(val: string): FormulaResult {
@@ -251,6 +374,9 @@ export function useFormulaEval(
     if (fn === 'decline') return evalDecline(rawArg)
     if (fn === 'money-text') return evalMoneyText(rawArg)
     if (fn === 'today') return evalToday(rawArg)
+    if (fn === 'count-row') return evalCountRow(rawArg)
+    if (fn === 'if') return evalIf(rawArg)
+    if (fn === 'month-gen') return evalMonthGen(rawArg)
 
     return evalNumericFormula(fn, rawArg)
   }
