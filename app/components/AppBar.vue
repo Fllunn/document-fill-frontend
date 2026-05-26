@@ -54,6 +54,9 @@ async function logout(): Promise<void> {
         >
           {{ link.title }}
         </NuxtLink>
+        <NuxtLink v-if="!userFirstLetter" to="/help" class="text-decoration-none text-high-emphasis mx-3">
+          Помощь
+        </NuxtLink>
       </div>
 
       <v-spacer></v-spacer>
@@ -87,6 +90,12 @@ async function logout(): Promise<void> {
               >
                 <v-list-item-title>Выйти</v-list-item-title>
               </v-list-item>
+
+              <v-divider></v-divider>
+
+              <v-list-item to="/help" prepend-icon="mdi-help" rounded="xl">
+                <v-list-item-title>Помощь</v-list-item-title>
+              </v-list-item>
             </v-list>
           </v-menu>
         </template>
@@ -99,8 +108,6 @@ async function logout(): Promise<void> {
             Регистрация
           </v-btn>
         </template>
-
-        <slot name="action" />
       </div>
 
       <div class="d-flex d-sm-none align-center">
@@ -139,6 +146,12 @@ async function logout(): Promise<void> {
               >
                 <v-list-item-title>Выйти</v-list-item-title>
               </v-list-item>
+
+              <v-divider></v-divider>
+
+              <v-list-item to="/help" prepend-icon="mdi-help" rounded="xl">
+                <v-list-item-title>Помощь</v-list-item-title>
+              </v-list-item>
             </template>
 
             <template v-else>
@@ -148,11 +161,13 @@ async function logout(): Promise<void> {
               <v-list-item to="/register" prepend-icon="mdi-account-plus" rounded="xl">
                 <v-list-item-title>Регистрация</v-list-item-title>
               </v-list-item>
+
+              <v-divider></v-divider>
+
+              <v-list-item to="/help" prepend-icon="mdi-help" rounded="xl">
+                <v-list-item-title>Помощь</v-list-item-title>
+              </v-list-item>
             </template>
-
-            <v-divider class="my-1"></v-divider>
-
-            <slot name="action-mobile" />
           </v-list>
         </v-menu>
       </div>
