@@ -12,19 +12,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <v-app>
-    <AppBar>
-      <template #action>
-        <v-btn href="/help/index.htm" target="_blank" variant="flat" color="primary">
-          Помощь
-        </v-btn>
-      </template>
-
-      <template #action-mobile>
-        <v-list-item href="/help/index.htm" target="_blank" prepend-icon="mdi-help" rounded="xl">
-          <v-list-item-title>Помощь</v-list-item-title>
-        </v-list-item>
-      </template>
-    </AppBar>
+    <AppBar />
 
     <v-main>
       <slot />

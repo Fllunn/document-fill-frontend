@@ -5,7 +5,8 @@ const currentYear = new Date().getFullYear()
 
 const footerLinks = [
   { text: 'Политика конфиденциальности', to: '/documents/privacy-policy' },
-  { text: 'Пользовательское соглашение', to: '/documents/terms-of-use' }
+  { text: 'Пользовательское соглашение', to: '/documents/terms-of-use' },
+  { text: 'Помощь', to: '/help' }
 ]
 </script>
 
