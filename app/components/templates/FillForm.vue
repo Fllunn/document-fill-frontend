@@ -139,6 +139,12 @@ watch(namePattern, (val) => {
     namePattern.value = val.slice(0, DOCUMENT_NAME_MAX_LENGTH)
 })
 
+const namePreview = computed(() => {
+  const pattern = namePattern.value?.trim()
+  if (!pattern || !/\{[^}]+\}/.test(pattern)) return ''
+  return resolvePattern(pattern, buildFlatValues())
+})
+
 watch(namePatternCombobox, (combobox) => {
   if (!combobox) return
   nextTick(() => {
@@ -295,8 +301,8 @@ async function generate(format: 'docx' | 'pdf') {
   }
 
   const totalApproxBytes = allImageSources.reduce((s, src) => s + src.length * 0.75, 0)
-  
-  if (totalApproxBytes > 1024 * 1024) {
+
+  if (!isAdmin.value && totalApproxBytes > 1024 * 1024) {
     toast.error('Суммарный размер изображений превышает 1 МБ')
     return
   }
@@ -563,9 +569,10 @@ function formulaHint(val: string | ImageValue | undefined): string | undefined {
               v-model="namePattern"
               :items="savedPatterns"
               :rules="[documentNameRule]"
+              :hint="namePreview ? `Значение: ${namePreview}` : ''"
+              persistent-hint
               label="Название документа"
               variant="outlined"
-              hide-details="auto"
               clearable
             >
               <template #item="{ item, props: itemProps }">
