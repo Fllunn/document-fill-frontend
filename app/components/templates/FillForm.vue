@@ -246,7 +246,8 @@ function buildFlatValues(): Record<string, string> {
   const flat: Record<string, string> = {}
   for (const [key, value] of Object.entries(values.value)) {
     if (typeof value === 'string') {
-      flat[key.startsWith('Разное.') ? key.slice(7) : key] = value
+      const flatKey = key.startsWith('Разное.') ? key.slice(7) : key
+      flat[flatKey] = isFormula(value) ? resolveFormula(value) : value
     }
   }
   return flat
