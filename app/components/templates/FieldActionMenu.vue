@@ -131,13 +131,13 @@ async function handleFileSelect(e: Event) {
     return
   }
 
-  if (file.size > IMAGE_SINGLE_MAX_BYTES) {
+  if (!isAdmin.value && file.size > IMAGE_SINGLE_MAX_BYTES) {
     toast.error(`Размер изображения превышает ${IMAGE_SINGLE_MAX_BYTES / 1024} КБ`)
     return
   }
 
   const existingBytes = props.currentImageBytes ?? 0
-  if (existingBytes + file.size > IMAGE_TOTAL_MAX_BYTES) {
+  if (!isAdmin.value && existingBytes + file.size > IMAGE_TOTAL_MAX_BYTES) {
     toast.error(`Суммарный размер всех изображений должен быть меньше ${IMAGE_TOTAL_MAX_BYTES / (1024 * 1024)} МБ`)
     return
   }

@@ -28,7 +28,7 @@ const NUMERIC_FORMULA_HANDLERS: Record<string, (nums: number[]) => number> = {
   avg: nums => (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0),
 }
 
-const STRING_FORMULA_NAMES = ['decline', 'money-text', 'today', 'count-row', 'if', 'month-gen']
+const STRING_FORMULA_NAMES = ['decline', 'money-text', 'today', 'count-row', 'if', 'month-gen', 'calc']
 
 const FORMULA_ALIASES: Record<string, string> = {
   сумм: 'sum',
@@ -39,6 +39,7 @@ const FORMULA_ALIASES: Record<string, string> = {
   'сумма-строк': 'count-row',
   если: 'if',
   'месяц-род': 'month-gen',
+  вычислить: 'calc',
 }
 
 const FORMULA_RE = new RegExp(
@@ -189,16 +190,26 @@ export function useFormulaEval(
 
       if (rows.length === 0 || !(field in rows[0]!))
         return { nums: [], error: `поле «${field}» не найдено в таблице «${table}»` }
-      
+
+      const nums: number[] = []
       for (const row of rows) {
         const raw = row[field] as string
-        if (raw && !isValidNumeric(raw))
+        if (!raw) continue
+        if (isValidNumeric(raw)) {
+          nums.push(parseNumeric(raw))
+        } else if (FORMULA_RE.test(raw.trim())) {
+          const result = evalFormula(raw)
+          if (result.error) return { nums: [], error: result.error }
+          const n = typeof result.value === 'number'
+            ? result.value
+            : parseFloat(String(result.value).replace(',', '.'))
+          if (isNaN(n)) return { nums: [], error: `формула «${raw}» не вернула число` }
+          nums.push(n)
+        } else {
           return { nums: [], error: `значение «${raw}» не является числом` }
+        }
       }
-      return {
-        nums: rows.map(r => r[field] as string).filter(r => r && isValidNumeric(r)).map(parseNumeric),
-        error: null,
-      }
+      return { nums, error: null }
     }
 
     return { nums: [], error: `неверный синтаксис «${t}»` }
@@ -364,6 +375,199 @@ export function useFormulaEval(
     return { value: MONTH_GENITIVE[n - 1]!, error: null }
   }
 
+  function evalCalc(rawArg: string): FormulaResult {
+    type Token =
+      | { type: 'NUM'; value: number }
+      | { type: 'OP'; op: '+' | '-' | '*' | '/' }
+      | { type: 'LPAREN' }
+      | { type: 'RPAREN' }
+      | { type: 'FIELD'; raw: string }
+      | { type: 'FORMULA'; raw: string }
+
+    type ParseOk = { val: number; pos: number }
+    type ParseErr = { error: string }
+    type ParseResult = ParseOk | ParseErr
+
+    const expr = rawArg.trim()
+    if (!expr) return { value: null, error: 'пустое выражение' }
+
+    function tokenize(s: string): Token[] | string {
+      const tokens: Token[] = []
+      let i = 0
+
+      while (i < s.length) {
+        const ch = s[i]!
+
+        if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') { i++; continue }
+
+        if (ch === '{') {
+          const j = s.indexOf('}', i)
+          if (j === -1) return 'незакрытая фигурная скобка'
+          tokens.push({ type: 'FIELD', raw: s.slice(i, j + 1) })
+          i = j + 1
+          continue
+        }
+
+        const lastTok = tokens[tokens.length - 1]
+        const prevIsOperand = lastTok !== undefined && (
+          lastTok.type === 'NUM' || lastTok.type === 'RPAREN' ||
+          lastTok.type === 'FIELD' || lastTok.type === 'FORMULA'
+        )
+
+        if (ch >= '0' && ch <= '9') {
+          let j = i
+          while (j < s.length && s[j]! >= '0' && s[j]! <= '9') j++
+          if (j < s.length && (s[j] === '.' || s[j] === ',')) {
+            j++
+            while (j < s.length && s[j]! >= '0' && s[j]! <= '9') j++
+          }
+          tokens.push({ type: 'NUM', value: parseFloat(s.slice(i, j).replace(',', '.')) })
+          i = j
+          continue
+        }
+
+        if (ch === '-' && !prevIsOperand && i + 1 < s.length && s[i + 1]! >= '0' && s[i + 1]! <= '9') {
+          let j = i + 1
+          while (j < s.length && s[j]! >= '0' && s[j]! <= '9') j++
+          if (j < s.length && (s[j] === '.' || s[j] === ',')) {
+            j++
+            while (j < s.length && s[j]! >= '0' && s[j]! <= '9') j++
+          }
+          tokens.push({ type: 'NUM', value: parseFloat(s.slice(i, j).replace(',', '.')) })
+          i = j
+          continue
+        }
+
+        if (ch === '+' || ch === '-' || ch === '*' || ch === '/') {
+          tokens.push({ type: 'OP', op: ch as '+' | '-' | '*' | '/' })
+          i++
+          continue
+        }
+
+        if (ch === '(') { tokens.push({ type: 'LPAREN' }); i++; continue }
+        if (ch === ')') { tokens.push({ type: 'RPAREN' }); i++; continue }
+
+        if (/[a-zа-яёA-ZА-ЯЁ]/.test(ch)) {
+          const start = i
+          while (i < s.length && /[a-zа-яёA-ZА-ЯЁ0-9\-]/.test(s[i]!)) i++
+          const name = s.slice(start, i)
+          if (i >= s.length || s[i] !== '(')
+            return `неизвестный идентификатор «${name}»`
+          let depth = 0
+          while (i < s.length) {
+            if (s[i] === '(') depth++
+            else if (s[i] === ')') { depth--; if (depth === 0) { i++; break } }
+            i++
+          }
+          if (depth !== 0) return `незакрытая скобка в формуле «${name}»`
+          tokens.push({ type: 'FORMULA', raw: s.slice(start, i) })
+          continue
+        }
+
+        return `неожиданный символ «${ch}»`
+      }
+
+      return tokens
+    }
+
+    function parseExpr(tokens: Token[], pos: number): ParseResult {
+      const first = parseTerm(tokens, pos)
+      if ('error' in first) return first
+      let val = first.val
+      let cur = first.pos
+
+      while (cur < tokens.length) {
+        const tok = tokens[cur]!
+        if (tok.type !== 'OP' || (tok.op !== '+' && tok.op !== '-')) break
+        const op = tok.op; cur++
+        const right = parseTerm(tokens, cur)
+        if ('error' in right) return right
+        cur = right.pos
+        val = op === '+' ? val + right.val : val - right.val
+      }
+
+      return { val, pos: cur }
+    }
+
+    function parseTerm(tokens: Token[], pos: number): ParseResult {
+      const first = parseFactor(tokens, pos)
+      if ('error' in first) return first
+      let val = first.val
+      let cur = first.pos
+
+      while (cur < tokens.length) {
+        const tok = tokens[cur]!
+        if (tok.type !== 'OP' || (tok.op !== '*' && tok.op !== '/')) break
+        const op = tok.op; cur++
+        const right = parseFactor(tokens, cur)
+        if ('error' in right) return right
+        cur = right.pos
+        if (op === '/') {
+          if (right.val === 0) return { error: 'деление на ноль' }
+          val = val / right.val
+        }
+        else {
+          val = val * right.val
+        }
+      }
+
+      return { val, pos: cur }
+    }
+
+    function parseFactor(tokens: Token[], pos: number): ParseResult {
+      const tok = pos < tokens.length ? tokens[pos] : undefined
+      if (tok?.type === 'OP' && tok.op === '-') {
+        const atom = parseAtom(tokens, pos + 1)
+        if ('error' in atom) return atom
+        return { val: -atom.val, pos: atom.pos }
+      }
+      return parseAtom(tokens, pos)
+    }
+
+    function parseAtom(tokens: Token[], pos: number): ParseResult {
+      if (pos >= tokens.length) return { error: 'неожиданный конец выражения' }
+      const tok = tokens[pos]!
+
+      if (tok.type === 'NUM') return { val: tok.value, pos: pos + 1 }
+
+      if (tok.type === 'LPAREN') {
+        const inner = parseExpr(tokens, pos + 1)
+        if ('error' in inner) return inner
+        if (inner.pos >= tokens.length || tokens[inner.pos]!.type !== 'RPAREN')
+          return { error: 'ожидается закрывающая скобка' }
+        return { val: inner.val, pos: inner.pos + 1 }
+      }
+
+      if (tok.type === 'FIELD') {
+        const resolved = resolveFieldRef(tok.raw)
+        if (resolved === null) return { error: `поле «${tok.raw}» не найдено` }
+        const n = parseFloat(resolved.replace(',', '.'))
+        if (isNaN(n)) return { error: `значение поля «${tok.raw}» не является числом` }
+        return { val: n, pos: pos + 1 }
+      }
+
+      if (tok.type === 'FORMULA') {
+        const r = evalFormula(tok.raw)
+        if (r.error) return { error: r.error }
+        const n = typeof r.value === 'number' ? r.value : parseFloat(String(r.value).replace(',', '.'))
+        if (isNaN(n)) return { error: `формула «${tok.raw}» не вернула число` }
+        return { val: n, pos: pos + 1 }
+      }
+
+      return { error: 'неожиданный токен' }
+    }
+
+    const tokResult = tokenize(expr)
+    if (typeof tokResult === 'string') return { value: null, error: tokResult }
+    if (tokResult.length === 0) return { value: null, error: 'пустое выражение' }
+
+    const parsed = parseExpr(tokResult, 0)
+    if ('error' in parsed) return { value: null, error: parsed.error }
+    if (parsed.pos !== tokResult.length) return { value: null, error: 'неожиданный токен в выражении' }
+
+    return { value: parseFloat(parsed.val.toFixed(2)), error: null }
+  }
+
   function evalFormula(val: string): FormulaResult {
     const match = val.trim().match(FORMULA_RE)
     if (!match) return { value: null, error: 'неверный синтаксис' }
@@ -377,6 +581,7 @@ export function useFormulaEval(
     if (fn === 'count-row') return evalCountRow(rawArg)
     if (fn === 'if') return evalIf(rawArg)
     if (fn === 'month-gen') return evalMonthGen(rawArg)
+    if (fn === 'calc') return evalCalc(rawArg)
 
     return evalNumericFormula(fn, rawArg)
   }
