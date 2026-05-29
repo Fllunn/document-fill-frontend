@@ -5,6 +5,11 @@ const items = [
     to: '/admin/users',
     icon: 'mdi-account-group-outline',
   },
+  {
+    title: 'Telegram',
+    to: '/admin/telegram',
+    icon: 'mdi-send-circle-outline',
+  },
 ]
 </script>
 
