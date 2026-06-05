@@ -37,7 +37,7 @@ async function logout(): Promise<void> {
 </script>
 
 <template>
-  <v-app-bar flat border>
+  <v-app-bar flat color="transparent" class="app-bar-blur">
     <v-container class="d-flex align-center">
       <NuxtLink to="/" class="text-decoration-none text-high-emphasis">
         <div class="font-weight-bold text-h6">{{ APP_NAME }}</div>
@@ -183,3 +183,13 @@ async function logout(): Promise<void> {
     @submit="logout"
   />
 </template>
+
+<style scoped>
+.app-bar-blur {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+}
+</style>
+
