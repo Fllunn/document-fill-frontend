@@ -1,5 +1,6 @@
 import { incline } from 'lvovich'
-import { convert } from 'number-to-words-ru'
+import pkg from 'number-to-words-ru'
+const { convert } = pkg
 
 type DeclensionCase = 'nominative' | 'genitive' | 'dative' | 'accusative' | 'instrumental' | 'prepositional'
 

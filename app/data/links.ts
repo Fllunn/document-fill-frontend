@@ -1,3 +1,5 @@
+import { APP_MAIL } from '../constants/app.constants'
+
 export const getLinks = (siteUrl: string) => ({
   termsOfUse: {
     text: `${siteUrl}/documents/terms-of-use`,
@@ -12,7 +14,7 @@ export const getLinks = (siteUrl: string) => ({
     href: '/',
   },
   email: {
-    text: 'support@documentfill.ru',
-    href: 'mailto:support@documentfill.ru',
+    text: APP_MAIL,
+    href: `mailto:${APP_MAIL}`,
   },
 })

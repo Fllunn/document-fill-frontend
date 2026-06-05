@@ -25,9 +25,9 @@ export const useDocumentExtract = () => {
 
       for (const [key, value] of Object.entries(res.values)) {
         if (Array.isArray(value)) {
-          const category = `${key}[]`
+          const category = key.endsWith('[]') ? key : `${key}[]`
           const vars = Object.keys(value[0] ?? {})
-          
+
           data[category] = vars
           loopVals[category] = value.map(row =>
             Object.fromEntries(vars.map(v => [v, (row as Record<string, string>)[v] ?? '']))
@@ -44,6 +44,29 @@ export const useDocumentExtract = () => {
           if (!data['Разное']) data['Разное'] = []
           data['Разное'].push(key)
           vals[`Разное.${key}`] = (value as string) ?? ''
+        }
+      }
+
+      if (res.rawValues) {
+        for (const [key, value] of Object.entries(res.rawValues)) {
+          if (Array.isArray(value)) {
+            const category = key.endsWith('[]') ? key : `${key}[]`
+            const rows = loopVals[category]
+            if (rows) {
+              for (let i = 0; i < value.length; i++) {
+                const rawRow = value[i] as Record<string, string> | undefined
+                if (rawRow && rows[i]) {
+                  for (const [field, formula] of Object.entries(rawRow)) {
+                    if (formula) rows[i]![field] = formula
+                  }
+                }
+              }
+            }
+          } else if (key.includes('.')) {
+            if (key in vals) vals[key] = value as string
+          } else {
+            if (`Разное.${key}` in vals) vals[`Разное.${key}`] = value as string
+          }
         }
       }
 

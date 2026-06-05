@@ -1,26 +1,39 @@
 import { useDocumentApi } from '~/api/DocumentApi'
+import { useSaveBlob } from '~/composables/Documents/useSaveBlob'
 import { toast } from 'vue3-toastify'
 
 export const useDocumentUpdate = () => {
   const api = useDocumentApi()
+  const { saveBlob } = useSaveBlob()
   const loading = ref(false)
 
-  async function update(file: File, values: Record<string, any>, name?: string): Promise<boolean> {
+  async function update(
+    file: File,
+    values: Record<string, any>,
+    rawValues: Record<string, any> | undefined,
+    name?: string,
+    format: 'docx' | 'pdf' = 'docx',
+  ): Promise<boolean> {
     loading.value = true
     try {
-      const blob = await api.update(file, values, name)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${name ?? 'document'}.docx`
-      document.body.appendChild(a)
-      a.click()
-      
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 100)
+      const blob = await api.update(file, values, rawValues, name, format)
+      const filename = `${name ?? 'document'}.${format}`
+      const saved = await saveBlob(blob, filename, format)
+      if (!saved) {
+        toast.info('Отмена')
+        return false
+      }
+      toast.success(`Документ "${filename}" создан`)
       return true
-    } catch {
-      toast.error('Ошибка при обновлении документа')
+    } catch (error: any) {
+      const blob: Blob | undefined = error?.data
+
+      const json = blob instanceof Blob ? JSON.parse(await blob.text()) : (error?.data ?? {})
+
+      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? '')
+
+      toast.error(msg || 'Ошибка при обновлении документа')
+
       return false
     } finally {
       loading.value = false

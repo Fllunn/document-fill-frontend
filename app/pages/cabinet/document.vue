@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { toast } from 'vue3-toastify'
 import { useDocumentExtract } from '~/composables/Documents/useDocumentExtract'
+import { DOCUMENT_FILE_MAX_BYTES } from '~/constants/app.constants'
 
 definePageMeta({ middleware: 'auth' })
 
 const { loading: extracting, extract, variables, initialValues, initialLoopValues, docName } = useDocumentExtract()
 const { isAdmin } = useRole()
 
-const MAX_SIZE = 512 * 1024
-
 const file = ref<File | null>(null)
 const extracted = ref(false)
 const isDragging = ref(false)
-const fileInput = ref<HTMLInputElement | null>(null)
+const fillFormSection = ref<HTMLElement | null>(null)
 
 const { fileSize } = useFileSize(file)
 
@@ -20,8 +19,8 @@ function setFile(picked: File | undefined) {
   if (!picked?.name.endsWith('.docx'))
     return toast('Разрешены только файлы .docx', { type: 'error' })
 
-  if (!isAdmin.value && picked.size > MAX_SIZE)
-    return toast('Размер файла не должен превышать 512 КБ', { type: 'error' })
+  if (!isAdmin.value && picked.size > DOCUMENT_FILE_MAX_BYTES)
+    return toast(`Размер файла не должен превышать ${DOCUMENT_FILE_MAX_BYTES / (1024 * 1024)} МБ`, { type: 'error' })
 
   file.value = picked
   extracted.value = false
@@ -35,14 +34,19 @@ function onDrop(e: DragEvent) {
 async function submit() {
   if (!file.value) return
   const success = await extract(file.value)
-  if (success) extracted.value = true
+  if (success) {
+    extracted.value = true
+    await nextTick()
+    await nextTick()
+    const sectionEl = (fillFormSection.value as any)?.$el as HTMLElement | undefined
+    const firstTitle = sectionEl?.querySelector<HTMLElement>('.v-card-title')
+    if (firstTitle) {
+      const top = firstTitle.getBoundingClientRect().top + window.scrollY - 64
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }
 }
 
-function reset() {
-  file.value = null
-  extracted.value = false
-  if (fileInput.value) fileInput.value.value = ''
-}
 </script>
 
 <template>
@@ -79,7 +83,6 @@ function reset() {
             </v-card-text>
 
             <input
-              ref="fileInput"
               type="file"
               accept=".docx"
               class="d-none"
@@ -94,9 +97,7 @@ function reset() {
               <TemplatesFileCard
                 :title="file.name"
                 :subtitle="fileSize"
-                action-icon="mdi-close"
                 class="flex-grow-1"
-                @action="reset"
               />
 
               <v-btn
@@ -112,7 +113,7 @@ function reset() {
         </v-card>
       </v-col>
 
-      <v-col v-if="extracted && file" cols="12">
+      <v-col v-if="extracted && file" ref="fillFormSection" cols="12">
         <TemplatesFillForm
           :file="file"
           :external-data="variables"
