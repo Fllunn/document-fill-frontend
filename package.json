@@ -16,6 +16,7 @@
     "number-to-words-ru": "^2.4.1",
     "nuxt": "^4.2.2",
     "pinia": "^3.0.4",
+    "swiper": "^12.1.4",
     "validator": "^13.15.35",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.26",
