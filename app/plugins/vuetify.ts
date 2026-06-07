@@ -1,8 +1,12 @@
 import '@mdi/font/css/materialdesignicons.css'
 import { createVuetify } from 'vuetify'
+import { VVideo } from 'vuetify/labs/VVideo'
 
 export default defineNuxtPlugin((nuxtApp) => {
 	const vuetify = createVuetify({
+		components: {
+			VVideo,
+		},
 		theme: {
 			themes: {
 				light: {

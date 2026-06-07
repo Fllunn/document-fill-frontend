@@ -1,4 +1,5 @@
 export const APP_NAME = 'DocTemp'
+export const APP_MAIL = 'doctemp.support@gmail.com'
 
 export const TEMPLATE_FILE_MAX_BYTES = 512 * 1024
 export const TEMPLATE_FIELDS_LIMIT = 200
