@@ -42,10 +42,7 @@ export const useDocumentUpdate = () => {
       toast.success(`Документ "${filename}" создан`)
       return true
     } catch (error: any) {
-      const json = error?.data ?? {}
-      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? error?.message ?? '')
-
-      toast.error(msg || 'Ошибка при обновлении документа')
+      toast.error('Ошибка при обновлении документа, пожалуйста, попробуйте еще раз')
       return false
     } finally {
       loading.value = false
