@@ -6,7 +6,7 @@ defineProps<{ steps: Step[] }>()
 
 <template>
   <v-container class="py-16">
-    <h1 class="text-center mb-12">Как это работает?</h1>
+    <TypeWriter tag="h2" class="text-center mb-12 font-bold" :strings="['Как сделать документ?']" :loop="false"/>
     <v-row justify="center">
 
       <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">

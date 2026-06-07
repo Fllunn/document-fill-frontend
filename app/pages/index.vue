@@ -12,16 +12,18 @@ const steps = [
   { title: 'Скачайте готовый документ', description: 'Скачайте заполненный документ в формате DOCX или PDF' },
 ]
 
+const h1Done = ref(false)
+
 </script>
 
 <template>
 
-  <v-container class="overflow-hidden">
+  <v-container class="overflow-hidden hero-section">
     <v-row align="center" style="padding: clamp(3rem, 5vw, 6rem) 0;">
       <v-col cols="12" md="6" class="pl-md-10">
-        <h1 class="hero-title">Создавайте Word и PDF документы быстро</h1>
+        <TypeWriter tag="h1" class="hero-title py-2 font-bold"  :strings="['Создавайте Word документы быстро']" :loop="false" @complete="h1Done = true"/>
 
-        <h2 class="py-4">Загрузите файл Word расширения DOCX с полями для заполнения вида {НазваниеПоля}, заполните форму на сайте и скачайте готовый документ в DOCX или PDF</h2>
+        <TypeWriter v-if="h1Done" tag="h2" class="py-4" :strings="['Загрузите файл Word расширения DOCX с полями для заполнения вида {НазваниеПоля}, заполните форму на сайте и скачайте готовый документ в DOCX или PDF']" :loop="false"/>
 
         <v-btn size="x-large" color="primary" class="mt-4 hero-btn" to="/register">НАЧАТЬ</v-btn>
       </v-col>
@@ -34,7 +36,7 @@ const steps = [
   </v-container>
 
   <v-container class="demo-section">
-    <h1 class="text-center bold">Демонстрация работы</h1>
+    <TypeWriter tag="h2" class="text-center font-bold" :strings="['Демонстрация работы']" :loop="false" />
     <v-row justify="center" class="mt-6">
       <v-col cols="12" md="8">
         <div class="demo-video-placeholder">
@@ -49,6 +51,12 @@ const steps = [
 </template>
 
 <style scoped>
+.hero-section {
+  min-height: calc(100vh - var(--v-layout-top, 64px));
+  display: flex;
+  align-items: center;
+}
+
 .hero-title {
   font-size: clamp(1.25rem, 6vw, 4.5rem);
   line-height: 1.2;
