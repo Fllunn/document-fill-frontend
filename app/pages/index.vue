@@ -42,7 +42,7 @@ onMounted(() => {
     <v-row justify="center" class="mt-6">
       <v-col cols="12" md="8">
         <div class="demo-video-placeholder">
-          <VideoMain src="/videos/demo.mp4" image="/images/demo-preview.png" />
+          <VideoMain src="/videos/demo.mp4" image="/images/demo-preview.webp" />
         </div>
       </v-col>
     </v-row>
