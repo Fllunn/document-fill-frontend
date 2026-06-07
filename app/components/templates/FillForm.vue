@@ -613,7 +613,7 @@ function formulaHint(val: string | ImageValue | undefined): string | undefined {
               </v-btn>
             </div>
             <span class="text-medium-emphasis mt-1 py-2">
-              Формат DOCX (word) позволяет изменять документ в дальнейшем<br>Вы можете скачать PDF, но его нельзя будет отредактировать
+              Формат DOCX (word) позволяет изменять документ в дальнейшем<br>Вы можете скачать PDF, но его нельзя будет отредактировать<br>Если вы используете iphone, то используйте браузер Safari
             </span>
           </v-col>
         </v-row>
