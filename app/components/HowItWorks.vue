@@ -7,7 +7,12 @@ const { reveal } = useScrollReveal()
 
 onMounted(() => {
   reveal('.howitworks-title')
-  reveal('.howitworks-step')
+  const isMobile = window.innerWidth < 960
+  if (isMobile) {
+    reveal('.howitworks-step', { perElement: true })
+  } else {
+    reveal('.howitworks-step')
+  }
 })
 </script>
 
@@ -20,7 +25,7 @@ onMounted(() => {
         <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">1</span>
         </v-avatar>
-        <v-card width="300" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
+        <v-card width="100%" style="max-width: 300px" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
           <v-card-text class="d-flex align-center justify-center flex-wrap h-100 text-center">
             <span>Меня зовут <span class="text-primary font-weight-bold">{Имя}</span>, мне <span class="text-primary font-weight-bold">{Возраст}</span> лет!</span>
           </v-card-text>
@@ -33,7 +38,7 @@ onMounted(() => {
         <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">2</span>
         </v-avatar>
-        <v-card width="300" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
+        <v-card width="100%" style="max-width: 300px" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
           <v-card-text class="d-flex flex-column justify-center h-100">
             <v-text-field
               model-value="Иван"
@@ -65,7 +70,7 @@ onMounted(() => {
         <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">3</span>
         </v-avatar>
-        <v-card width="300" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
+        <v-card width="100%" style="max-width: 300px" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
           <v-card-text class="d-flex align-center justify-center h-100 text-center">
             <span>Меня зовут Иван, мне 20 лет!</span>
           </v-card-text>

@@ -5,12 +5,33 @@ defineProps<{
   title?: string
   address?: string
 }>()
+
+const isMobile = computed(() => {
+  if (import.meta.client) {
+    return /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)
+  }
+  return false
+})
 </script>
 
 <template>
   <v-card flat>
     <div class="work-video-wrap">
-      <v-video :src="src" :image="image" class="work-video" controls />
+      <video
+        v-if="isMobile"
+        :src="src"
+        :poster="image"
+        class="work-video"
+        controls
+        controlsList="nodownload"
+      />
+      <v-video
+        v-else
+        :src="src"
+        :image="image"
+        class="work-video"
+        controls
+      />
     </div>
     <v-card-subtitle v-if="address" class="text-center px-0 pt-2 pb-0 text-wrap">{{ address }}</v-card-subtitle>
     <v-card-title v-if="title" class="text-center px-0 pt-1 text-wrap">{{ title }}</v-card-title>
