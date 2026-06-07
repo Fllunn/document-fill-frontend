@@ -35,12 +35,19 @@ async function downloadTemplate(templateId: string, name: string): Promise<void>
   try {
     const blob = await TemplatesApi.download(templateId)
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
 
-    a.href = url
-    a.download = `${name}.docx`
-    a.click()
-    URL.revokeObjectURL(url)
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.open(url)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } else {
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${name}.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 100)
+    }
   } finally {
     downloadingIds.value.delete(templateId)
     downloadingIds.value = new Set(downloadingIds.value)
