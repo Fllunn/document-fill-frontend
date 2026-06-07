@@ -1,11 +1,4 @@
 <script setup lang="ts">
-const features = [
-  { title: 'Создание документов', icon: 'mdi-file-document-outline' },
-  { title: 'Хранение шаблонов', icon: 'mdi-folder-outline' },
-  { title: 'Экспорт в PDF или DOCX', icon: 'mdi-file-pdf-box' },
-  { title: 'Удобное заполнение', icon: 'mdi-form-textbox' },
-]
-
 const steps = [
   { title: 'Загрузите шаблон', description: 'Создайте документ в Microsoft Word с полями для заполнения и загрузите его на сайт' },
   { title: 'Заполните шаблон', description: 'Введите нужные данные в удобную форму заполнения на сайте' },
@@ -14,6 +7,11 @@ const steps = [
 
 const h1Done = ref(false)
 
+const { reveal } = useScrollReveal()
+
+onMounted(() => {
+  reveal('.demo-section')
+})
 </script>
 
 <template>
@@ -25,7 +23,11 @@ const h1Done = ref(false)
 
         <TypeWriter v-if="h1Done" tag="h2" class="py-4" :strings="['Загрузите файл Word расширения DOCX с полями для заполнения вида {НазваниеПоля}, заполните форму на сайте и скачайте готовый документ в DOCX или PDF']" :loop="false"/>
 
-        <v-btn size="x-large" color="primary" class="mt-4 hero-btn" to="/register">НАЧАТЬ</v-btn>
+        <v-row justify="center" justify-sm="start" class="mt-4">
+          <v-col cols="auto">
+            <v-btn size="x-large" color="primary" class="hero-btn" to="/register">НАЧАТЬ</v-btn>
+          </v-col>
+        </v-row>
       </v-col>
 
       <v-col cols="12" md="6">

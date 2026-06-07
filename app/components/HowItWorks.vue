@@ -2,14 +2,21 @@
 type Step = { title: string; description: string }
 
 defineProps<{ steps: Step[] }>()
+
+const { reveal } = useScrollReveal()
+
+onMounted(() => {
+  reveal('.howitworks-title')
+  reveal('.howitworks-step')
+})
 </script>
 
 <template>
   <v-container class="py-16">
-    <TypeWriter tag="h2" class="text-center mb-12 font-bold" :strings="['Как сделать документ?']" :loop="false"/>
+    <TypeWriter tag="h2" class="howitworks-title text-center mb-12 font-bold" :strings="['Как сделать документ?']" :loop="false"/>
     <v-row justify="center">
 
-      <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">
+      <v-col cols="12" md="4" class="howitworks-step d-flex flex-column align-center text-center px-8">
         <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">1</span>
         </v-avatar>
@@ -22,7 +29,7 @@ defineProps<{ steps: Step[] }>()
         <p class="text-wrap">{{ steps[0]?.description }}</p>
       </v-col>
 
-      <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">
+      <v-col cols="12" md="4" class="howitworks-step d-flex flex-column align-center text-center px-8">
         <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">2</span>
         </v-avatar>
@@ -54,7 +61,7 @@ defineProps<{ steps: Step[] }>()
         <p class="text-wrap">{{ steps[1]?.description }}</p>
       </v-col>
 
-      <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">
+      <v-col cols="12" md="4" class="howitworks-step d-flex flex-column align-center text-center px-8">
         <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">3</span>
         </v-avatar>
