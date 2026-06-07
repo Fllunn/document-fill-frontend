@@ -3,10 +3,9 @@ export const useDocumentApi = () => {
 
   return {
     create(templateId: string, values: Record<string, any>, rawValues: Record<string, any> | undefined, name?: string, format?: 'docx' | 'pdf', namePattern?: string) {
-      return $apiFetch<Blob>('/documents', {
+      return $apiFetch<{ downloadToken: string }>('/documents', {
         method: 'POST',
         body: { templateId, values, rawValues, name, namePattern },
-        responseType: 'blob',
         params: format ? { format } : undefined,
       })
     },
@@ -26,10 +25,9 @@ export const useDocumentApi = () => {
       form.append('values', JSON.stringify(values))
       if (rawValues) form.append('rawValues', JSON.stringify(rawValues))
       if (name) form.append('name', name)
-      return $apiFetch<Blob>('/documents/update', {
+      return $apiFetch<{ downloadToken: string }>('/documents/update', {
         method: 'POST',
         body: form,
-        responseType: 'blob',
         params: format ? { format } : undefined,
       })
     },
