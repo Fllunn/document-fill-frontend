@@ -10,10 +10,10 @@ defineProps<{ steps: Step[] }>()
     <v-row justify="center">
 
       <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">
-        <v-avatar size="64" variant="outlined" class="mb-6">
+        <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">1</span>
         </v-avatar>
-        <v-card width="300" height="150" class="mb-6" variant="outlined" elevation="2">
+        <v-card width="300" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
           <v-card-text class="d-flex align-center justify-center flex-wrap h-100 text-center">
             <span>Меня зовут <span class="text-primary font-weight-bold">{Имя}</span>, мне <span class="text-primary font-weight-bold">{Возраст}</span> лет!</span>
           </v-card-text>
@@ -23,10 +23,10 @@ defineProps<{ steps: Step[] }>()
       </v-col>
 
       <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">
-        <v-avatar size="64" variant="outlined" class="mb-6">
+        <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">2</span>
         </v-avatar>
-        <v-card width="300" height="150" class="mb-6" variant="outlined" elevation="2">
+        <v-card width="300" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
           <v-card-text class="d-flex flex-column justify-center h-100">
             <v-text-field
               model-value="Иван"
@@ -35,7 +35,7 @@ defineProps<{ steps: Step[] }>()
               density="compact"
               readonly
               hide-details
-              class="mb-2"
+              class="no-select mb-2"
               style="flex: 0 0 auto"
             />
             <v-text-field
@@ -45,6 +45,7 @@ defineProps<{ steps: Step[] }>()
               density="compact"
               readonly
               hide-details
+              class="no-select"
               style="flex: 0 0 auto"
             />
           </v-card-text>
@@ -54,10 +55,10 @@ defineProps<{ steps: Step[] }>()
       </v-col>
 
       <v-col cols="12" md="4" class="d-flex flex-column align-center text-center px-8">
-        <v-avatar size="64" variant="outlined" class="mb-6">
+        <v-avatar size="64" variant="outlined" class="mb-6 no-select">
           <span class="step-number">3</span>
         </v-avatar>
-        <v-card width="300" height="150" class="mb-6" variant="outlined" elevation="2">
+        <v-card width="300" height="150" class="mb-6 no-select" variant="outlined" elevation="2" inert>
           <v-card-text class="d-flex align-center justify-center h-100 text-center">
             <span>Меня зовут Иван, мне 20 лет!</span>
           </v-card-text>
@@ -75,5 +76,11 @@ defineProps<{ steps: Step[] }>()
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1;
+}
+
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
 }
 </style>
