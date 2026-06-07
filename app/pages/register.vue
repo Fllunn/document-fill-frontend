@@ -70,8 +70,7 @@ const submit = handleSubmit(async (values) => {
         
         <v-img src="/icons/pen-with-copybook.svg" width="63" height="59"/>
 
-        <v-card-title>Начните создавать документы</v-card-title>
-        <v-card-subtitle>Все необходимое для работы с шаблонами</v-card-subtitle>
+        <h2 class="text-wrap py-2">Начните создавать документы</h2>
 
         <v-form class="mt-6 w-100" @submit.prevent="submit">
           
