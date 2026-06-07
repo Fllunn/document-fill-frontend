@@ -16,6 +16,15 @@ const navLinks = computed(() => {
   return links
 })
 
+const route = useRoute()
+
+function handleLogoClick(e: MouseEvent) {
+  if (route.path === '/') {
+    e.preventDefault()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
 const auth = useAuth()
 const isLogoutDialogOpen = ref(false)
 const loading = ref(false)
@@ -39,7 +48,7 @@ async function logout(): Promise<void> {
 <template>
   <v-app-bar flat color="transparent" class="app-bar-blur">
     <v-container class="d-flex align-center">
-      <NuxtLink to="/" class="text-decoration-none text-high-emphasis">
+      <NuxtLink to="/" class="text-decoration-none text-high-emphasis" @click="handleLogoClick">
         <div class="font-weight-bold text-h6">{{ APP_NAME }}</div>
       </NuxtLink>
 
