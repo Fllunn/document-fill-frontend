@@ -36,17 +36,17 @@ body,
 // чтобы текст в заголовках и кнопках переносился по словам
 .v-application {
   hyphens: none;
-}
 
-.v-card-title,
-.v-list-item-title,
-.v-alert-title,
-.v-messages,
-.v-toolbar-title,
-.v-btn {
-  hyphens: none;
-  word-break: normal;
-  overflow-wrap: anywhere;
+  .v-card-title,
+  .v-list-item-title,
+  .v-alert-title,
+  .v-messages,
+  .v-toolbar-title,
+  .v-btn {
+    hyphens: none;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 h1 {
