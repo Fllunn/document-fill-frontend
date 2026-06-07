@@ -35,6 +35,17 @@ const steps = [
     </v-row>
   </v-container>
 
+  <v-container class="demo-section">
+    <h1 class="text-center bold">Демонстрация работы</h1>
+    <v-row justify="center" class="mt-6">
+      <v-col cols="12" md="8">
+        <div class="demo-video-placeholder">
+          <VideoMain src="/videos/demo.mp4" image="/images/demo-preview.png" />
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
+
 </template>
 
 <style scoped>
@@ -45,5 +56,11 @@ const steps = [
 
 .hero-btn {
   font-size: clamp(1.25rem, 0.7528rem + 1.4205vw, 1.875rem);
+}
+
+.demo-video-placeholder :deep(.work-img) {
+  max-height: 70vh;
+  height: auto;
+  object-fit: contain;
 }
 </style>
