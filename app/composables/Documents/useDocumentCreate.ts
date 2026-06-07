@@ -19,18 +19,22 @@ export const useDocumentCreate = () => {
     loading.value = true
     try {
       const { downloadToken } = await api.create(templateId, values, rawValues, name, format, namePattern)
-      const filename = `${name ?? 'document'}.${format}`
       const apiBase = (config.public.apiBase as string).replace(/\/$/, '')
       const downloadUrl = `${apiBase}/documents/download/${downloadToken}`
+      const isMobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)
+
+      if (isMobile) {
+        window.location.href = downloadUrl
+        return true
+      }
 
       const response = await fetch(downloadUrl)
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}))
-        const msg = errJson?.message ?? `Ошибка загрузки (${response.status})`
-        throw Object.assign(new Error(msg), { data: errJson })
+        throw Object.assign(new Error(errJson?.message ?? `Ошибка загрузки (${response.status})`), { data: errJson })
       }
       const blob = await response.blob()
-
+      const filename = `${name ?? 'document'}.${format}`
       const saved = await saveBlob(blob, filename, format)
       if (!saved) {
         toast.info('Отмена')
