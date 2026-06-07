@@ -19,17 +19,26 @@ export const useDocumentUpdate = () => {
     try {
       const { downloadToken } = await api.update(file, values, rawValues, name, format)
       const filename = `${name ?? 'document'}.${format}`
-      const downloadUrl = `${config.public.apiBase}/documents/download/${downloadToken}`
-      const isMobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)
+      const apiBase = (config.public.apiBase as string).replace(/\/$/, '')
+      const downloadUrl = `${apiBase}/documents/download/${downloadToken}`
 
+      const response = await fetch(downloadUrl)
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}))
+        const msg = errJson?.message ?? `Ошибка загрузки (${response.status})`
+        throw Object.assign(new Error(msg), { data: errJson })
+      }
+      const blob = await response.blob()
+
+      const isMobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)
       if (isMobile) {
-        window.location.href = downloadUrl
+        const blobUrl = URL.createObjectURL(blob)
+        window.location.href = blobUrl
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
         toast.success(`Документ "${filename}" создан`)
         return true
       }
 
-      const response = await fetch(downloadUrl)
-      const blob = await response.blob()
       const saved = await saveBlob(blob, filename, format)
       if (!saved) {
         toast.info('Отмена')
@@ -39,10 +48,9 @@ export const useDocumentUpdate = () => {
       return true
     } catch (error: any) {
       const json = error?.data ?? {}
-      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? '')
+      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? error?.message ?? '')
 
       toast.error(msg || 'Ошибка при обновлении документа')
-
       return false
     } finally {
       loading.value = false
