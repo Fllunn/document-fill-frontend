@@ -30,15 +30,6 @@ export const useDocumentUpdate = () => {
       }
       const blob = await response.blob()
 
-      const isMobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)
-      if (isMobile) {
-        const blobUrl = URL.createObjectURL(blob)
-        window.location.href = blobUrl
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-        toast.success(`Документ "${filename}" создан`)
-        return true
-      }
-
       const saved = await saveBlob(blob, filename, format)
       if (!saved) {
         toast.info('Отмена')
