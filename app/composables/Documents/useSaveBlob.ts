@@ -29,6 +29,13 @@ export const useSaveBlob = () => {
     }
 
     const url = URL.createObjectURL(blob)
+
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.open(url)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return true
+    }
+
     const a = document.createElement('a')
     a.href = url
     a.download = filename
