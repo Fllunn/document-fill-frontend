@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const features = [
   { title: 'Создание документов', icon: 'mdi-file-document-outline' },
   { title: 'Хранение шаблонов', icon: 'mdi-folder-outline' },
@@ -8,12 +7,11 @@ const features = [
 ]
 
 const steps = [
-  { number: '1', title: 'Создайте шаблон', text: 'Подготовьте документ, который будете использовать многократно.' },
-  { number: '2', title: 'Добавьте поля [ ]', text: 'Отметьте места для автоматического заполнения данными.' },
-  { number: '3', title: 'Загрузите шаблон', text: 'Сохраните шаблон на сайте.' },
-  { number: '4', title: 'Заполните данные', text: 'Введите необходимые значения в подготовленные поля.' },
-  { number: '5', title: 'Получите документ', text: 'Выгрузите готовый файл в PDF или DOCX.' },
+  { title: 'Загрузите шаблон', description: 'Создайте документ в Microsoft Word с полями для заполнения и загрузите его на сайт' },
+  { title: 'Заполните шаблон', description: 'Введите нужные данные в удобную форму заполнения на сайте' },
+  { title: 'Скачайте готовый документ', description: 'Скачайте заполненный документ в формате DOCX или PDF' },
 ]
+
 </script>
 
 <template>
@@ -45,6 +43,8 @@ const steps = [
       </v-col>
     </v-row>
   </v-container>
+
+  <HowItWorks :steps="steps" />
 
 </template>
 
