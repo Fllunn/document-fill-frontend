@@ -33,6 +33,15 @@ body,
   font-style: italic;
 }
 
+// чтобы текст в заголовках и кнопках переносился по словам
+.v-card-title,
+.v-list-item-title,
+.v-toolbar-title,
+.v-btn {
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
 h1 {
   font-size: clamp(1.625rem, 1.0284rem + 1.7045vw, 2.375rem);
   font-weight: 400;
