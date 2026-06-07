@@ -1,33 +1,49 @@
 <script setup lang="ts">
+
+const features = [
+  { title: 'Создание документов', icon: 'mdi-file-document-outline' },
+  { title: 'Хранение шаблонов', icon: 'mdi-folder-outline' },
+  { title: 'Экспорт в PDF или DOCX', icon: 'mdi-file-pdf-box' },
+  { title: 'Удобное заполнение', icon: 'mdi-form-textbox' },
+]
+
+const steps = [
+  { number: '1', title: 'Создайте шаблон', text: 'Подготовьте документ, который будете использовать многократно.' },
+  { number: '2', title: 'Добавьте поля [ ]', text: 'Отметьте места для автоматического заполнения данными.' },
+  { number: '3', title: 'Загрузите шаблон', text: 'Сохраните шаблон на сайте.' },
+  { number: '4', title: 'Заполните данные', text: 'Введите необходимые значения в подготовленные поля.' },
+  { number: '5', title: 'Получите документ', text: 'Выгрузите готовый файл в PDF или DOCX.' },
+]
 </script>
+
 <template>
-  <v-container>
-    <v-row>
 
-      <v-col class="full-height-block" cols="12">
-        <v-parallax src=" /images/first-section2.jpg" class="h-100 d-flex justify-center align-center user-select-none"
-          draggable="false" cover gradient="rgba(0,0,0,0.5), rgba(0,0,0,0.5)">
-          <v-row class="d-flex justify-center align-center">
+  <v-container class="overflow-hidden">
+    <v-row align="center" style="padding: clamp(3rem, 5vw, 6rem) 0;">
+      <v-col cols="12" md="6" class="pl-md-10">
+        <h1 class="hero-title">Создавайте Word и PDF документы быстро</h1>
 
-            <v-col cols="12" class="d-flex justify-center align-center mb-16">
-              <!-- <h1>Лучшее веб приложение для автозаполнения документов</h1> -->
-            </v-col>
-            
-          </v-row>
-        </v-parallax>
+        <h2 class="py-4">Загрузите файл Word расширения DOCX с полями для заполнения вида {НазваниеПоля}, заполните форму на сайте и скачайте готовый документ в DOCX или PDF</h2>
+
+        <v-btn size="x-large" color="primary" class="mt-4 hero-btn" to="/register">НАЧАТЬ</v-btn>
       </v-col>
 
-      <v-col cols="12" style="margin: clamp(3.125rem, -10.2083rem + 20.8333vw, 6.25rem) 0 !important;">
-        <v-row class="d-flex justify-center">
-          <v-col cols="11" md="9" class="justify-center align-center">
-            <h1>Добро пожаловать</h1>
-            <h2>
-              <br>
-              Какой-то текст
-            </h2>
-          </v-col>
-        </v-row>
+      <v-col cols="12" md="6">
+        <ImageMain src="/images/template-example.webp" alt="Template Image" title="Пример шаблона документа" cover></ImageMain>
       </v-col>
+      
     </v-row>
   </v-container>
+
 </template>
+
+<style scoped>
+.hero-title {
+  font-size: clamp(1.25rem, 6vw, 4.5rem);
+  line-height: 1.2;
+}
+
+.hero-btn {
+  font-size: clamp(1.25rem, 0.7528rem + 1.4205vw, 1.875rem);
+}
+</style>

@@ -79,7 +79,7 @@ const login = handleSubmit(async (values) => {
 
           <v-btn
             type="submit"
-            color="accent"
+            color="primary"
             class="mt-4 w-100"
             :disabled="!meta.valid"
             :loading="loading"
