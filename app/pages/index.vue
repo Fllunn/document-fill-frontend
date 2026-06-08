@@ -56,7 +56,7 @@ onMounted(() => {
   <v-container class="faq-section">
     <v-row justify="center">
       <v-col cols="12" md="8">
-        <h2 class="text-center font-bold mb-6">Частые вопросы</h2>
+        <TypeWriter tag="h2" class="text-center font-bold mb-6" :strings="['Частые вопросы']" :loop="false" />
         <FaqCategory :items="homeFaqCategories" />
         <div class="text-center mt-2">
           <v-btn color="primary" to="/help">Все вопросы</v-btn>
