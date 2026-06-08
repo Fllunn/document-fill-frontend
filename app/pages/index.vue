@@ -14,6 +14,7 @@ const { reveal } = useScrollReveal()
 onMounted(() => {
   reveal('.demo-section')
   reveal('.faq-section')
+  reveal('.cta-section')
 })
 </script>
 
@@ -61,6 +62,15 @@ onMounted(() => {
         <div class="text-center mt-2">
           <v-btn color="primary" to="/help">Все вопросы</v-btn>
         </div>
+      </v-col>
+    </v-row>
+  </v-container>
+
+  <v-container class="cta-section">
+    <v-row justify="center" class="py-16 my-8">
+      <v-col cols="12" md="8" class="text-center">
+        <TypeWriter tag="h1" class="hero-title font-bold mb-8" :strings="['Начните создавать документы прямо сейчас']" :loop="false" />
+        <v-btn size="x-large" color="primary" class="hero-btn" to="/register">НАЧАТЬ</v-btn>
       </v-col>
     </v-row>
   </v-container>
