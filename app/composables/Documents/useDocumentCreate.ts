@@ -44,14 +44,14 @@ export const useDocumentCreate = () => {
       return true
     } catch (error: any) {
       const json = error?.data ?? {}
-      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? error?.message ?? '')
+      const msg: string = Array.isArray(json?.message) ? json.message[0] : (json?.message ?? '')
 
       if (msg.includes('лимит')) {
         toast.warning(msg)
         return true
       }
 
-      toast.error(msg || 'Ошибка при создании документа')
+      toast.error('Ошибка при создании документа, пожалуйста, попробуйте еще раз')
       return false
     } finally {
       loading.value = false

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { homeFaqCategories } from '~/data/faq'
+
 const steps = [
   { title: 'Загрузите шаблон', description: 'Создайте документ в Microsoft Word с полями для заполнения и загрузите его на сайт' },
   { title: 'Заполните шаблон', description: 'Введите нужные данные в удобную форму заполнения на сайте' },
@@ -11,6 +13,8 @@ const { reveal } = useScrollReveal()
 
 onMounted(() => {
   reveal('.demo-section')
+  reveal('.faq-section')
+  reveal('.cta-section')
 })
 </script>
 
@@ -49,6 +53,27 @@ onMounted(() => {
   </v-container>
 
   <HowItWorks :steps="steps" />
+
+  <v-container class="faq-section">
+    <v-row justify="center">
+      <v-col cols="12" md="8">
+        <TypeWriter tag="h2" class="text-center font-bold mb-6" :strings="['Частые вопросы']" :loop="false" />
+        <FaqCategory :items="homeFaqCategories" />
+        <div class="text-center mt-2">
+          <v-btn color="primary" to="/help">Все вопросы</v-btn>
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
+
+  <v-container class="cta-section">
+    <v-row justify="center" class="py-16 my-8">
+      <v-col cols="12" md="8" class="text-center">
+        <TypeWriter tag="h1" class="hero-title font-bold mb-8" :strings="['Начните создавать документы прямо сейчас']" :loop="false" />
+        <v-btn size="x-large" color="primary" class="hero-btn" to="/register">НАЧАТЬ</v-btn>
+      </v-col>
+    </v-row>
+  </v-container>
 
 </template>
 
