@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { homeFaqCategories } from '~/data/faq'
+
 const steps = [
   { title: 'Загрузите шаблон', description: 'Создайте документ в Microsoft Word с полями для заполнения и загрузите его на сайт' },
   { title: 'Заполните шаблон', description: 'Введите нужные данные в удобную форму заполнения на сайте' },
@@ -11,6 +13,7 @@ const { reveal } = useScrollReveal()
 
 onMounted(() => {
   reveal('.demo-section')
+  reveal('.faq-section')
 })
 </script>
 
@@ -49,6 +52,18 @@ onMounted(() => {
   </v-container>
 
   <HowItWorks :steps="steps" />
+
+  <v-container class="faq-section">
+    <v-row justify="center">
+      <v-col cols="12" md="8">
+        <h2 class="text-center font-bold mb-6">Частые вопросы</h2>
+        <FaqCategory :items="homeFaqCategories" />
+        <div class="text-center mt-2">
+          <v-btn color="primary" to="/help">Все вопросы</v-btn>
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
 
 </template>
 
