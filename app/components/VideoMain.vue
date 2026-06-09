@@ -24,6 +24,7 @@ const isMobile = computed(() => {
         class="work-video"
         controls
         controlsList="nodownload"
+        preload="none"
       />
       <v-video
         v-else
@@ -50,5 +51,14 @@ const isMobile = computed(() => {
   width: 100%;
   height: auto;
   display: block;
+}
+
+.work-video-wrap :deep(video),
+.work-video-wrap :deep(.v-img__img) {
+  object-fit: contain;
+}
+
+.work-video-wrap :deep(.v-video__center-icon) {
+  color: black !important;
 }
 </style>
