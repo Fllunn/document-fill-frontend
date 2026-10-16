@@ -6,6 +6,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   runtimeConfig: {
+    // куда server/routes/api проксирует запросы /api/** (в compose — http://backend:3033)
+    apiProxyTarget: process.env.NUXT_API_PROXY_TARGET || 'http://localhost:3033',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3033',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
